@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://example.co.uk/</loc></url>
+  <url><loc>https://example.co.uk/products</loc></url>
+  <url><loc>https://example.co.uk/categories</loc></url>
+  <url><loc>https://example.co.uk/about</loc></url>
+  <url><loc>https://example.co.uk/contact</loc></url>
+</urlset>
