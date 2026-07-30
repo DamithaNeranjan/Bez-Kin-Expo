@@ -8,8 +8,9 @@
 - Hidden admin dashboard.
 - Google sign-in gate for approved administrators.
 - Product, category, and settings management.
-- Firebase Hosting, Firestore, Storage, and security rules.
-- WebP image upload helper.
+- Firebase Hosting, Firestore, Authentication, and security rules.
+- Cloudinary/external image URL workflow for no-card image hosting.
+- Optional Firebase Storage upload helper retained for a later billing-enabled upgrade.
 - SEO metadata, robots file, and starter sitemap.
 
 ## Near-Term Improvements
@@ -18,7 +19,8 @@
 - Add route-level code splitting to reduce initial bundle size.
 - Add richer sitemap generation after real product data is loaded.
 - Add admin user management UI.
-- Add image variant generation for `300px`, `800px`, and `1200px` outputs.
+- Add a Cloudinary URL helper for consistent `300px`, `800px`, and `1200px` image variants.
+- Disable or hide Firebase Storage upload buttons unless Storage is configured.
 - Add analytics after the Firebase project is connected.
 
 ## Future E-Commerce

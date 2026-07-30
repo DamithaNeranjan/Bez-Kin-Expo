@@ -1,4 +1,4 @@
-# Database And Storage
+# Database And Images
 
 ## Firestore Collections
 
@@ -70,7 +70,28 @@ These are intentionally not implemented in V1:
 - `wishlist`
 - `cart`
 
-## Storage Paths
+## Image URL Strategy
+
+V1 stores public image URLs directly in Firestore fields:
+
+- `categories.image`
+- `products.coverImage`
+- `products.images[]`
+- `settings/site.logo`
+
+Recommended no-card provider: Cloudinary Free. Upload images in Cloudinary, copy the secure HTTPS URL, and paste it into the admin form.
+
+Example:
+
+```text
+https://res.cloudinary.com/your-cloud-name/image/upload/f_auto,q_auto,w_1200/products/ceylon-black-tea.webp
+```
+
+Do not use Google Drive or Dropbox share links for catalogue images. They are not designed as stable public image CDN URLs.
+
+## Optional Firebase Storage Paths
+
+Firebase Storage is not required for the no-card setup. If the project is later upgraded to Blaze, these paths are supported by the existing rules and upload helper:
 
 - `products/{productId}/cover.webp`
 - `products/{productId}/image-{index}.webp`
@@ -79,7 +100,7 @@ These are intentionally not implemented in V1:
 
 ## Security Summary
 
-- Public visitors can read active catalogue content and images.
+- Public visitors can read active catalogue content and external public image URLs.
 - Public visitors cannot create, edit, or delete data.
-- Administrators can manage products, categories, settings, users, and images.
+- Administrators can manage products, categories, settings, users, and image URL fields.
 - Administrator access requires Firebase Auth plus an active `users/{uid}` document with `role: "administrator"`.

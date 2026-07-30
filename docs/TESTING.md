@@ -30,7 +30,8 @@ npm run build
 - Administrators can create, edit, delete, activate, feature, and mark products available.
 - Administrators can create, edit, delete, activate, and reorder categories.
 - Administrators can update company settings.
-- Image uploads convert to WebP and save the returned Storage URL to Firestore.
+- Cloudinary or other HTTPS image URLs save correctly to Firestore and render on public pages.
+- Firebase Storage upload buttons are only tested if Storage is enabled later.
 
 ## Firebase Emulator Rule Tests
 
@@ -38,10 +39,12 @@ Use Firebase Emulator Suite to verify:
 
 - Public reads of active categories and available products are allowed.
 - Public writes to Firestore are denied.
-- Public image reads are allowed.
-- Public image uploads and deletes are denied.
+- Public Firestore writes are denied.
+- Administrator Firestore writes are allowed.
 - Active administrators can create, update, and delete catalogue data.
 - Inactive users and non-administrators cannot write catalogue data.
+
+Storage emulator tests are optional and only apply after enabling Firebase Storage.
 
 ## SEO Checks
 

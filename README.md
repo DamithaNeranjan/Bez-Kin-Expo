@@ -9,8 +9,9 @@ React, Vite, Tailwind, and Firebase catalogue site for a UK food import company.
 - Clean slug routes with metadata, OpenGraph/Twitter tags, and Product JSON-LD.
 - Hidden admin dashboard for products, categories, and settings.
 - Google Authentication gate backed by `users/{uid}` Firestore documents.
-- Firestore and Storage rules for public reads and administrator-only writes.
-- In-browser image resizing and WebP conversion before Firebase Storage uploads.
+- Firestore rules for public reads and administrator-only writes.
+- External image URL support, recommended with Cloudinary Free for a no-card setup.
+- Optional Firebase Storage rules and upload helpers for a later Blaze-plan upgrade.
 - Seed catalogue data used locally until Firebase is configured.
 
 ## Local Setup
@@ -43,7 +44,8 @@ Enable these Firebase services in the project:
 - Hosting
 - Cloud Firestore
 - Authentication with Google provider
-- Storage
+
+Firebase Storage is optional. New Firebase projects require billing for Cloud Storage, so the recommended no-card approach is to upload product/category/logo images to Cloudinary Free and paste the HTTPS image URLs into the admin forms.
 
 Copy `.firebaserc.example` to `.firebaserc` and set the Firebase project ID.
 
@@ -76,7 +78,11 @@ Firestore collections:
 
 Reserved future collections are not created in V1: `orders`, `customers`, `payments`, `reviews`, `wishlist`, and `cart`.
 
-Storage paths:
+Image fields store HTTPS URLs. Recommended starter source:
+
+- Cloudinary Free image URLs, for example `https://res.cloudinary.com/.../image/upload/.../product.webp`
+
+Optional Firebase Storage paths for a later Blaze-plan upgrade:
 
 - `products/{productId}/cover.webp`
 - `products/{productId}/image-{index}.webp`
@@ -86,8 +92,9 @@ Storage paths:
 ## Project Docs
 
 - [Architecture](docs/ARCHITECTURE.md)
-- [Database and Storage](docs/DATABASE.md)
+- [Database and Images](docs/DATABASE.md)
 - [Deployment](docs/DEPLOYMENT.md)
+- [External Images With Cloudinary](docs/IMAGES.md)
 - [Testing](docs/TESTING.md)
 - [Roadmap](docs/ROADMAP.md)
 
@@ -102,4 +109,4 @@ npm run build
 firebase emulators:start
 ```
 
-Use the emulator UI to confirm public reads, denied public writes, administrator CRUD, and Storage image permissions.
+Use the emulator UI to confirm public reads, denied public writes, and administrator CRUD. Storage rule checks are only needed if Firebase Storage is enabled later.

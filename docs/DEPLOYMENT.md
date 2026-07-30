@@ -4,8 +4,9 @@
 
 - Node.js and npm
 - Firebase CLI
-- A Firebase project with Hosting, Firestore, Authentication, and Storage enabled
+- A Firebase project with Hosting, Firestore, and Authentication enabled
 - Google Authentication provider enabled in Firebase Authentication
+- A free Cloudinary account for product, category, and logo image hosting
 
 ## Environment Variables
 
@@ -41,10 +42,34 @@ Copy `.firebaserc.example` to `.firebaserc` and set the real project ID:
 ```bash
 npm install
 npm run build
-firebase deploy
+firebase deploy --only hosting,firestore
 ```
 
 Firebase Hosting serves the `dist` directory and rewrites all routes to `index.html` for React Router.
+
+Do not deploy Storage for the no-card setup. New Firebase projects require billing for Cloud Storage. If Storage is enabled later on Blaze, deploy it with:
+
+```bash
+firebase deploy --only storage
+```
+
+## Cloudinary Image Setup
+
+1. Create a free Cloudinary account.
+2. Upload product, category, and logo images to the Media Library.
+3. Copy each secure HTTPS image URL.
+4. Paste URLs into:
+   - `/admin/products` -> `Cover image URL`
+   - `/admin/products` -> `Additional image URLs`
+   - `/admin/categories` -> `Image URL`
+   - `/admin/settings` -> `Logo URL`
+5. Avoid the upload buttons unless Firebase Storage has been enabled.
+
+Cloudinary transformation URLs can be used for optimization, for example:
+
+```text
+https://res.cloudinary.com/your-cloud-name/image/upload/f_auto,q_auto,w_1200/products/example.webp
+```
 
 ## Domain Setup
 
