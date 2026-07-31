@@ -1,9 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Plus, Trash2, Upload } from "lucide-react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { FormFeedback, type FormFeedbackMessage } from "../../components/admin/FormFeedback";
+import { LoadingSpinner, LoadingState } from "../../components/ui/LoadingSpinner";
 import { deleteProduct, getCategories, getProducts, saveProduct } from "../../services/catalogService";
 import { uploadImage } from "../../services/storageService";
 import type { Category, Product } from "../../types/catalog";
@@ -21,7 +23,7 @@ const productSchema = z.object({
   origin: z.string().min(1),
   weight: z.string().min(1),
   sku: z.string().min(1),
-  coverImage: z.string().url(),
+  coverImage: z.string().url("Enter a valid cover image URL."),
   imageList: z.string().optional(),
   tags: z.string().optional(),
   available: z.boolean(),
@@ -43,7 +45,7 @@ const emptyProduct: ProductForm = {
   origin: "",
   weight: "",
   sku: "",
-  coverImage: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+  coverImage: "",
   imageList: "",
   tags: "",
   available: true,
@@ -54,8 +56,9 @@ const emptyProduct: ProductForm = {
 export function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<FormFeedbackMessage>(null);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const form = useForm<ProductForm>({ resolver: zodResolver(productSchema), defaultValues: emptyProduct });
   const name = form.watch("name");
   const id = form.watch("id");
@@ -73,6 +76,7 @@ export function AdminProducts() {
       if (!form.getValues("categoryId") && nextCategories[0]) {
         form.setValue("categoryId", nextCategories[0].id);
       }
+      setLoading(false);
     }), [form]);
 
   useEffect(() => {
@@ -81,42 +85,47 @@ export function AdminProducts() {
 
   const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      const images = values.imageList
-        ? values.imageList.split("\n").map((value) => value.trim()).filter(Boolean)
-        : [values.coverImage];
-      await saveProduct({
-        id: values.id ?? "",
-        name: values.name,
-        slug: slugify(values.slug),
-        shortDescription: values.shortDescription,
-        description: values.description,
-        categoryId: values.categoryId,
-        price: values.price,
-        currency: "GBP",
-        brand: values.brand,
-        origin: values.origin,
-        weight: values.weight,
-        sku: values.sku,
-        coverImage: values.coverImage,
-        images,
-        available: values.available,
-        featured: values.featured,
-        active: values.active,
-        tags: values.tags ? values.tags.split(",").map((tag) => tag.trim()).filter(Boolean) : [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      form.reset({ ...emptyProduct, categoryId: categories[0]?.id ?? "" });
-      await load();
-      setMessage("Product saved.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not save product.");
-    }
-  });
+  const onSubmit = form.handleSubmit(
+    async (values) => {
+      setMessage(null);
+      try {
+        const images = values.imageList
+          ? values.imageList.split("\n").map((value) => value.trim()).filter(Boolean)
+          : [values.coverImage];
+        await saveProduct({
+          id: values.id ?? "",
+          name: values.name,
+          slug: slugify(values.slug),
+          shortDescription: values.shortDescription,
+          description: values.description,
+          categoryId: values.categoryId,
+          price: values.price,
+          currency: "GBP",
+          brand: values.brand,
+          origin: values.origin,
+          weight: values.weight,
+          sku: values.sku,
+          coverImage: values.coverImage,
+          images,
+          available: values.available,
+          featured: values.featured,
+          active: values.active,
+          tags: values.tags ? values.tags.split(",").map((tag) => tag.trim()).filter(Boolean) : [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+        await load();
+        form.reset({ ...emptyProduct, categoryId: categories[0]?.id ?? "" });
+        setMessage({ status: "success", text: "Product saved successfully." });
+      } catch (error) {
+        setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not save product." });
+      }
+    },
+    () => setMessage({ status: "error", text: "Please fix the highlighted product fields before saving." })
+  );
 
   const editProduct = (product: Product) => {
+    setMessage(null);
     form.reset({
       ...product,
       imageList: product.images.join("\n"),
@@ -130,9 +139,9 @@ export function AdminProducts() {
     try {
       await deleteProduct(product.id);
       await load();
-      setMessage("Product deleted.");
+      setMessage({ status: "success", text: "Product deleted successfully." });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not delete product.");
+      setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not delete product." });
     }
   };
 
@@ -140,13 +149,14 @@ export function AdminProducts() {
     if (!file) return;
     setUploading(true);
     try {
+      setMessage(null);
       const productId = form.getValues("id") || slugify(form.getValues("name")) || "new-product";
       const url = await uploadImage(file, `products/${productId}/cover.webp`);
       form.setValue("coverImage", url, { shouldValidate: true });
       form.setValue("imageList", [url, form.getValues("imageList")].filter(Boolean).join("\n"));
-      setMessage("Image uploaded.");
+      setMessage({ status: "success", text: "Cover image uploaded and added to the form." });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not upload image.");
+      setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not upload image." });
     } finally {
       setUploading(false);
     }
@@ -195,13 +205,24 @@ export function AdminProducts() {
             <Checkbox label="Featured" {...form.register("featured")} />
             <Checkbox label="Active" {...form.register("active")} />
           </div>
-          {message ? <p className="rounded-md bg-mist p-3 text-sm text-ink">{message}</p> : null}
+          <FormFeedback message={message} />
           <div className="flex gap-2">
-            <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2 text-sm font-bold text-white">
-              <Plus className="h-4 w-4" />
-              Save product
+            <button type="submit" disabled={form.formState.isSubmitting} className="inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              {form.formState.isSubmitting ? <LoadingSpinner label="Saving..." size="sm" tone="light" /> : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Save product
+                </>
+              )}
             </button>
-            <button type="button" onClick={() => form.reset({ ...emptyProduct, categoryId: categories[0]?.id ?? "" })} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-bold">
+            <button
+              type="button"
+              onClick={() => {
+                setMessage(null);
+                form.reset({ ...emptyProduct, categoryId: categories[0]?.id ?? "" });
+              }}
+              className="rounded-md border border-slate-200 px-4 py-2 text-sm font-bold"
+            >
               Clear
             </button>
           </div>
@@ -211,7 +232,8 @@ export function AdminProducts() {
         <div className="border-b border-slate-200 p-5">
           <h2 className="text-xl font-black">Products</h2>
         </div>
-        <div className="overflow-x-auto">
+        {loading ? <div className="p-5"><LoadingState label="Loading products..." /></div> : null}
+        {!loading ? <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
               <tr>
@@ -241,40 +263,43 @@ export function AdminProducts() {
               ))}
             </tbody>
           </table>
-        </div>
+        </div> : null}
       </section>
     </div>
   );
 }
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string };
-function Input({ label, error, ...props }: InputProps) {
+const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, ...props }, ref) => {
   return (
     <label className="block">
       <span className="text-sm font-bold text-slate-700">{label}</span>
-      <input {...props} className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm focus-ring" />
+      <input ref={ref} {...props} className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm focus-ring" />
       {error ? <span className="mt-1 block text-xs font-semibold text-berry">{error}</span> : null}
     </label>
   );
-}
+});
+Input.displayName = "Input";
 
 type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string };
-function Textarea({ label, error, ...props }: TextareaProps) {
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({ label, error, ...props }, ref) => {
   return (
     <label className="block">
       <span className="text-sm font-bold text-slate-700">{label}</span>
-      <textarea {...props} rows={3} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus-ring" />
+      <textarea ref={ref} {...props} rows={3} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus-ring" />
       {error ? <span className="mt-1 block text-xs font-semibold text-berry">{error}</span> : null}
     </label>
   );
-}
+});
+Textarea.displayName = "Textarea";
 
 type CheckboxProps = InputHTMLAttributes<HTMLInputElement> & { label: string };
-function Checkbox({ label, ...props }: CheckboxProps) {
+const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({ label, ...props }, ref) => {
   return (
     <label className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2">
-      <input {...props} type="checkbox" />
+      <input ref={ref} {...props} type="checkbox" />
       {label}
     </label>
   );
-}
+});
+Checkbox.displayName = "Checkbox";

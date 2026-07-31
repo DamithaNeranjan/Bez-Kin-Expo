@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { Seo } from "../components/Seo";
+import { LoadingState } from "../components/ui/LoadingSpinner";
 import { getCategories, getProductBySlug, getProducts } from "../services/catalogService";
 import type { Category, Product } from "../types/catalog";
 
@@ -30,7 +31,7 @@ export function ProductDetails() {
   );
 
   if (loading) {
-    return <main className="mx-auto max-w-7xl px-4 py-16 text-slate-600 sm:px-6 lg:px-8">Loading product...</main>;
+    return <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"><LoadingState label="Loading product..." /></main>;
   }
 
   if (!product) {

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { Seo } from "../components/Seo";
+import { LoadingState } from "../components/ui/LoadingSpinner";
 import { getCategories, getCategoryBySlug, getProducts } from "../services/catalogService";
 import type { Category, Product } from "../types/catalog";
 
@@ -11,16 +12,23 @@ export function CategoryProducts() {
   const [category, setCategory] = useState<Category | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     void Promise.all([getCategoryBySlug(slug), getCategories(), getProducts()]).then(([nextCategory, nextCategories, nextProducts]) => {
       setCategory(nextCategory);
       setCategories(nextCategories);
       setProducts(nextProducts);
+      setLoading(false);
     });
   }, [slug]);
 
   const categoryProducts = useMemo(() => products.filter((product) => product.categoryId === category?.id), [category?.id, products]);
+
+  if (loading) {
+    return <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"><LoadingState label="Loading category..." /></main>;
+  }
 
   if (!category) {
     return (

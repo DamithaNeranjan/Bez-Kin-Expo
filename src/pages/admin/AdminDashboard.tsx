@@ -1,6 +1,7 @@
 import { Boxes, Settings, Tags } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
 import { getCategories, getProducts, getSiteSettings } from "../../services/catalogService";
 import type { Category, Product, SiteSettings } from "../../types/catalog";
 
@@ -8,12 +9,14 @@ export function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     void Promise.all([getProducts(true), getCategories(true), getSiteSettings()]).then(([nextProducts, nextCategories, nextSettings]) => {
       setProducts(nextProducts);
       setCategories(nextCategories);
       setSettings(nextSettings);
+      setLoading(false);
     });
   }, []);
 
@@ -21,11 +24,16 @@ export function AdminDashboard() {
     <div>
       <h1 className="text-3xl font-black">Dashboard</h1>
       <p className="mt-2 text-sm text-slate-600">Manage catalogue content, category ranges, and website settings.</p>
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      {loading ? (
+        <div className="mt-8 rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+          <LoadingSpinner label="Loading dashboard..." size="lg" />
+        </div>
+      ) : null}
+      {!loading ? <div className="mt-8 grid gap-4 md:grid-cols-3">
         <MetricCard to="/admin/products" icon={<Boxes className="h-5 w-5" />} label="Products" value={String(products.length)} />
         <MetricCard to="/admin/categories" icon={<Tags className="h-5 w-5" />} label="Categories" value={String(categories.length)} />
         <MetricCard to="/admin/settings" icon={<Settings className="h-5 w-5" />} label="Company" value={settings?.companyName ?? "Settings"} />
-      </div>
+      </div> : null}
       <section className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-bold">Firebase setup note</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">

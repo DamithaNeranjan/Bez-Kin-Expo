@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
 
 export function ProtectedAdminRoute({ children }: { children: JSX.Element }) {
   const { loading, user, isAdmin, authReady } = useAuth();
@@ -11,7 +12,7 @@ export function ProtectedAdminRoute({ children }: { children: JSX.Element }) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm font-semibold text-slate-600">
-        Checking administrator access...
+        <LoadingSpinner label="Checking administrator access..." size="lg" />
       </div>
     );
   }

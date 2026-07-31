@@ -1,9 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Plus, Trash2, Upload } from "lucide-react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { FormFeedback, type FormFeedbackMessage } from "../../components/admin/FormFeedback";
+import { LoadingSpinner, LoadingState } from "../../components/ui/LoadingSpinner";
 import { deleteCategory, getCategories, saveCategory } from "../../services/catalogService";
 import { uploadImage } from "../../services/storageService";
 import type { Category } from "../../types/catalog";
@@ -14,7 +16,7 @@ const categorySchema = z.object({
   name: z.string().min(2),
   slug: z.string().min(2),
   description: z.string().min(10),
-  image: z.string().url(),
+  image: z.string().url("Enter a valid image URL."),
   order: z.coerce.number().int().min(0),
   active: z.boolean()
 });
@@ -26,15 +28,16 @@ const emptyCategory: CategoryForm = {
   name: "",
   slug: "",
   description: "",
-  image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+  image: "",
   order: 1,
   active: true
 };
 
 export function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<FormFeedbackMessage>(null);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const form = useForm<CategoryForm>({ resolver: zodResolver(categorySchema), defaultValues: emptyCategory });
   const name = form.watch("name");
   const id = form.watch("id");
@@ -45,34 +48,43 @@ export function AdminCategories() {
     }
   }, [form, id, name]);
 
-  const load = useCallback(() => getCategories(true).then(setCategories), []);
+  const load = useCallback(() =>
+    getCategories(true).then((nextCategories) => {
+      setCategories(nextCategories);
+      setLoading(false);
+    }), []);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      await saveCategory({
-        id: values.id ?? "",
-        name: values.name,
-        slug: slugify(values.slug),
-        description: values.description,
-        image: values.image,
-        order: values.order,
-        active: values.active,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      form.reset({ ...emptyCategory, order: categories.length + 1 });
-      await load();
-      setMessage("Category saved.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not save category.");
-    }
-  });
+  const onSubmit = form.handleSubmit(
+    async (values) => {
+      setMessage(null);
+      try {
+        await saveCategory({
+          id: values.id ?? "",
+          name: values.name,
+          slug: slugify(values.slug),
+          description: values.description,
+          image: values.image,
+          order: values.order,
+          active: values.active,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+        await load();
+        form.reset({ ...emptyCategory, order: categories.length + 1 });
+        setMessage({ status: "success", text: "Category saved successfully." });
+      } catch (error) {
+        setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not save category." });
+      }
+    },
+    () => setMessage({ status: "error", text: "Please fix the highlighted category fields before saving." })
+  );
 
   const editCategory = (category: Category) => {
+    setMessage(null);
     form.reset(category);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -82,9 +94,9 @@ export function AdminCategories() {
     try {
       await deleteCategory(category.id);
       await load();
-      setMessage("Category deleted.");
+      setMessage({ status: "success", text: "Category deleted successfully." });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not delete category.");
+      setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not delete category." });
     }
   };
 
@@ -92,12 +104,13 @@ export function AdminCategories() {
     if (!file) return;
     setUploading(true);
     try {
+      setMessage(null);
       const categoryId = form.getValues("id") || slugify(form.getValues("name")) || "new-category";
       const url = await uploadImage(file, `categories/${categoryId}.webp`);
       form.setValue("image", url, { shouldValidate: true });
-      setMessage("Image uploaded.");
+      setMessage({ status: "success", text: "Category image uploaded and added to the form." });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not upload image.");
+      setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not upload image." });
     } finally {
       setUploading(false);
     }
@@ -124,13 +137,24 @@ export function AdminCategories() {
             <input type="checkbox" {...form.register("active")} />
             Active
           </label>
-          {message ? <p className="rounded-md bg-mist p-3 text-sm text-ink">{message}</p> : null}
+          <FormFeedback message={message} />
           <div className="flex gap-2">
-            <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2 text-sm font-bold text-white">
-              <Plus className="h-4 w-4" />
-              Save category
+            <button type="submit" disabled={form.formState.isSubmitting} className="inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              {form.formState.isSubmitting ? <LoadingSpinner label="Saving..." size="sm" tone="light" /> : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Save category
+                </>
+              )}
             </button>
-            <button type="button" onClick={() => form.reset({ ...emptyCategory, order: categories.length + 1 })} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-bold">
+            <button
+              type="button"
+              onClick={() => {
+                setMessage(null);
+                form.reset({ ...emptyCategory, order: categories.length + 1 });
+              }}
+              className="rounded-md border border-slate-200 px-4 py-2 text-sm font-bold"
+            >
               Clear
             </button>
           </div>
@@ -140,7 +164,8 @@ export function AdminCategories() {
         <div className="border-b border-slate-200 p-5">
           <h2 className="text-xl font-black">Categories</h2>
         </div>
-        <div className="overflow-x-auto">
+        {loading ? <div className="p-5"><LoadingState label="Loading categories..." /></div> : null}
+        {!loading ? <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
               <tr>
@@ -168,30 +193,32 @@ export function AdminCategories() {
               ))}
             </tbody>
           </table>
-        </div>
+        </div> : null}
       </section>
     </div>
   );
 }
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string };
-function Input({ label, error, ...props }: InputProps) {
+const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, ...props }, ref) => {
   return (
     <label className="block">
       <span className="text-sm font-bold text-slate-700">{label}</span>
-      <input {...props} className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm focus-ring" />
+      <input ref={ref} {...props} className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm focus-ring" />
       {error ? <span className="mt-1 block text-xs font-semibold text-berry">{error}</span> : null}
     </label>
   );
-}
+});
+Input.displayName = "Input";
 
 type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string };
-function Textarea({ label, error, ...props }: TextareaProps) {
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({ label, error, ...props }, ref) => {
   return (
     <label className="block">
       <span className="text-sm font-bold text-slate-700">{label}</span>
-      <textarea {...props} rows={3} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus-ring" />
+      <textarea ref={ref} {...props} rows={3} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus-ring" />
       {error ? <span className="mt-1 block text-xs font-semibold text-berry">{error}</span> : null}
     </label>
   );
-}
+});
+Textarea.displayName = "Textarea";

@@ -4,12 +4,9 @@ import {
   doc,
   getDoc,
   getDocs,
-  orderBy,
-  query,
   serverTimestamp,
   setDoc,
-  updateDoc,
-  where
+  updateDoc
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { seedCategories, seedProducts, seedSettings } from "../data/seedData";
@@ -25,11 +22,11 @@ export async function getCategories(includeInactive = false): Promise<Category[]
     return seedCategories.filter((category) => includeInactive || category.active).sort((a, b) => a.order - b.order);
   }
 
-  const categoryQuery = includeInactive
-    ? query(collection(db, "categories"), orderBy("order", "asc"))
-    : query(collection(db, "categories"), where("active", "==", true), orderBy("order", "asc"));
-  const snapshot = await getDocs(categoryQuery);
-  return snapshot.docs.map((categoryDoc) => ({ id: categoryDoc.id, ...categoryDoc.data() }) as Category);
+  const snapshot = await getDocs(collection(db, "categories"));
+  return snapshot.docs
+    .map((categoryDoc) => ({ id: categoryDoc.id, ...categoryDoc.data() }) as Category)
+    .filter((category) => includeInactive || category.active)
+    .sort((a, b) => a.order - b.order);
 }
 
 export async function getProducts(includeUnavailable = false): Promise<Product[]> {
@@ -39,11 +36,11 @@ export async function getProducts(includeUnavailable = false): Promise<Product[]
       .sort((a, b) => Number(b.featured) - Number(a.featured) || a.name.localeCompare(b.name));
   }
 
-  const productQuery = includeUnavailable
-    ? query(collection(db, "products"), orderBy("name", "asc"))
-    : query(collection(db, "products"), where("available", "==", true), where("active", "!=", false), orderBy("active"), orderBy("name", "asc"));
-  const snapshot = await getDocs(productQuery);
-  return snapshot.docs.map((productDoc) => ({ id: productDoc.id, ...productDoc.data() }) as Product);
+  const snapshot = await getDocs(collection(db, "products"));
+  return snapshot.docs
+    .map((productDoc) => ({ id: productDoc.id, ...productDoc.data() }) as Product)
+    .filter((product) => includeUnavailable || (product.available && product.active))
+    .sort((a, b) => Number(b.featured) - Number(a.featured) || a.name.localeCompare(b.name));
 }
 
 export async function getCategoryBySlug(slug: string) {

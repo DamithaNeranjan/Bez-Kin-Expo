@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { Seo } from "../components/Seo";
+import { LoadingState } from "../components/ui/LoadingSpinner";
 import { getCategories, getProducts } from "../services/catalogService";
 import type { Category, Product, ProductSort } from "../types/catalog";
 
@@ -14,11 +15,13 @@ export function Products() {
   const [categoryId, setCategoryId] = useState("all");
   const [sort, setSort] = useState<ProductSort>("featured");
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     void Promise.all([getCategories(), getProducts()]).then(([nextCategories, nextProducts]) => {
       setCategories(nextCategories);
       setProducts(nextProducts);
+      setLoading(false);
     });
   }, []);
 
@@ -96,13 +99,19 @@ export function Products() {
             </select>
           </label>
         </section>
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {visibleProducts.map((product) => (
-            <ProductCard key={product.id} product={product} category={categories.find((category) => category.id === product.categoryId)} />
-          ))}
-        </div>
-        {visibleProducts.length === 0 ? <p className="mt-10 rounded-lg border border-slate-200 bg-white p-6 text-center text-slate-600">No products match your filters.</p> : null}
-        <div className="mt-8 flex items-center justify-center gap-3">
+        {loading ? (
+          <div className="mt-8">
+            <LoadingState label="Loading products..." />
+          </div>
+        ) : (
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {visibleProducts.map((product) => (
+              <ProductCard key={product.id} product={product} category={categories.find((category) => category.id === product.categoryId)} />
+            ))}
+          </div>
+        )}
+        {!loading && visibleProducts.length === 0 ? <p className="mt-10 rounded-lg border border-slate-200 bg-white p-6 text-center text-slate-600">No products match your filters.</p> : null}
+        {!loading ? <div className="mt-8 flex items-center justify-center gap-3">
           <button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1} className="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-bold disabled:opacity-40">
             Previous
           </button>
@@ -112,7 +121,7 @@ export function Products() {
           <button type="button" onClick={() => setPage((value) => Math.min(pageCount, value + 1))} disabled={page === pageCount} className="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-bold disabled:opacity-40">
             Next
           </button>
-        </div>
+        </div> : null}
       </main>
     </>
   );
