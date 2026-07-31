@@ -51,12 +51,16 @@ export function Products() {
 
   return (
     <>
-      <Seo title="Products | Bez-Kin Expo" description="Search and filter the imported food product catalogue by category, tag, price, and availability." path="/products" />
+      <Seo
+        title="Sri Lankan Products | Bez-Kin Expo Ltd"
+        description="Search Sri Lankan groceries, Ceylon tea, rice, spices, snacks, beverages, and frozen favourites available for UK buyers."
+        path="/products"
+      />
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-wide text-leaf">Product catalogue</p>
-            <h1 className="mt-2 text-4xl font-black">Browse available products</h1>
+            <p className="text-sm font-bold uppercase tracking-wide text-leaf">Sri Lankan product catalogue</p>
+            <h1 className="mt-2 text-4xl font-black">Browse authentic groceries</h1>
           </div>
           <p className="text-sm font-semibold text-slate-500">{filteredProducts.length} products found</p>
         </div>
@@ -67,7 +71,7 @@ export function Products() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by name, tag, brand, or origin"
+              placeholder="Search tea, spices, snacks, staples, or origin"
               className="h-11 w-full rounded-md border border-slate-200 pl-10 pr-3 text-sm focus-ring"
             />
           </label>

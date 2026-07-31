@@ -2,7 +2,7 @@
 
 ## Overview
 
-Bez-Kin Expo is a React single-page catalogue application hosted on Firebase Hosting. The visitor-facing site reads product, category, and settings data from Cloud Firestore. Product, category, and logo images are stored as external HTTPS URLs, with Cloudinary Free recommended for the no-card setup. Firebase Storage remains an optional later upgrade. The hidden `/admin` area uses Firebase Authentication with Google sign-in and Firestore role checks.
+Bez-Kin Expo Ltd is a React single-page catalogue application for a UK business importing Sri Lankan groceries and food products. It is hosted on Firebase Hosting. The visitor-facing site reads product, category, and settings data from Cloud Firestore. Product, category, and logo images are stored as external HTTPS URLs, with Cloudinary Free recommended for the no-card setup. Firebase Storage remains an optional later upgrade. The hidden `/admin` area uses Firebase Authentication with Google sign-in and Firestore role checks.
 
 ## Application Layers
 

@@ -36,7 +36,7 @@ export function CategoryProducts() {
 
   return (
     <>
-      <Seo title={`${category.name} | Bez-Kin Expo`} description={category.description} path={`/categories/${category.slug}`} image={category.image} />
+      <Seo title={`${category.name} | Bez-Kin Expo Ltd`} description={category.description} path={`/categories/${category.slug}`} image={category.image} />
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Link to="/categories" className="inline-flex items-center gap-2 text-sm font-bold text-leaf">
           <ArrowLeft className="h-4 w-4" />
@@ -46,7 +46,7 @@ export function CategoryProducts() {
           <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
             <img src={category.image} alt={category.name} className="h-72 w-full object-cover lg:h-full" />
             <div className="p-8 lg:p-12">
-              <p className="text-sm font-bold uppercase tracking-wide text-harvest">Category</p>
+              <p className="text-sm font-bold uppercase tracking-wide text-harvest">Sri Lankan range</p>
               <h1 className="mt-2 text-4xl font-black">{category.name}</h1>
               <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-100">{category.description}</p>
             </div>

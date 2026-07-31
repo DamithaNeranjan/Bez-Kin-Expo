@@ -63,7 +63,7 @@ export function ProductDetails() {
 
   return (
     <>
-      <Seo title={`${product.name} | Bez-Kin Expo`} description={product.shortDescription} path={`/products/${product.slug}`} image={product.coverImage} jsonLd={jsonLd} />
+      <Seo title={`${product.name} | Bez-Kin Expo Ltd`} description={product.shortDescription} path={`/products/${product.slug}`} image={product.coverImage} jsonLd={jsonLd} />
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Link to="/products" className="inline-flex items-center gap-2 text-sm font-bold text-leaf">
           <ArrowLeft className="h-4 w-4" />

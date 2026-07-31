@@ -14,10 +14,10 @@ export function Contact() {
 
   return (
     <>
-      <Seo title="Contact | Bez-Kin Expo" description="Contact Bez-Kin Expo for product catalogue and UK food import enquiries." path="/contact" />
+      <Seo title="Contact | Bez-Kin Expo Ltd" description="Contact Bez-Kin Expo Ltd for Sri Lankan grocery import and product catalogue enquiries in the UK." path="/contact" />
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <p className="text-sm font-bold uppercase tracking-wide text-leaf">Contact</p>
-        <h1 className="mt-2 text-4xl font-black">Speak with the sales team</h1>
+        <h1 className="mt-2 text-4xl font-black">Bring Sri Lankan flavour to your shelves</h1>
         <div className="mt-8 grid gap-8 lg:grid-cols-[0.75fr_1.25fr]">
           <section className="space-y-4">
             <ContactCard icon={<Phone className="h-5 w-5" />} label="Phone" value={settings.phone} />

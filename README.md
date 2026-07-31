@@ -1,6 +1,6 @@
-# Bez-Kin Expo Catalogue
+# Bez-Kin Expo Ltd Catalogue
 
-React, Vite, Tailwind, and Firebase catalogue site for a UK food import company. The public site is a browse-only product catalogue, while `/admin` is reserved for approved Google Workspace staff.
+React, Vite, Tailwind, and Firebase catalogue site for a UK business importing Sri Lankan groceries and food products. The public site is a browse-only product catalogue, while `/admin` is reserved for approved Google Workspace staff.
 
 ## Features
 
