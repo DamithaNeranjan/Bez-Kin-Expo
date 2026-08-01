@@ -11,6 +11,8 @@ React, Vite, Tailwind, and Firebase catalogue site for a UK business importing S
 - Google Authentication gate backed by `users/{uid}` Firestore documents.
 - Firestore rules for public reads and administrator-only writes.
 - External image URL support, recommended with Cloudinary Free for a no-card setup.
+- Responsive public image optimization with blur placeholders.
+- Public/admin loading states and admin form success/error feedback.
 - Optional Firebase Storage rules and upload helpers for a later Blaze-plan upgrade.
 - Seed catalogue data used locally until Firebase is configured.
 

@@ -104,3 +104,4 @@ Firebase Storage is not required for the no-card setup. If the project is later 
 - Public visitors cannot create, edit, or delete data.
 - Administrators can manage products, categories, settings, users, and image URL fields.
 - Administrator access requires Firebase Auth plus an active `users/{uid}` document with `role: "administrator"`.
+- Public catalogue queries must include rule-compatible filters. Categories are queried with `active == true`; products are queried with `available == true` and `active == true`, then sorted in the app to avoid composite index requirements.

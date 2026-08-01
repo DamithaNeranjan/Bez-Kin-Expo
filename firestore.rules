@@ -19,7 +19,7 @@ service cloud.firestore {
     }
 
     match /products/{productId} {
-      allow read: if (resource.data.available == true && resource.data.active != false) || adminUser();
+      allow read: if (resource.data.available == true && resource.data.active == true) || adminUser();
       allow create, update, delete: if adminUser();
     }
 

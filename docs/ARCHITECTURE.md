@@ -12,6 +12,7 @@ Bez-Kin Expo Ltd is a React single-page catalogue application for a UK business 
 - `src/firebase`: Firebase app initialization from Vite environment variables.
 - `src/data`: realistic seed data used when Firebase is not configured.
 - `src/types`: catalogue, settings, and admin user TypeScript types.
+- `src/components/ui`: shared loading and optimized image primitives.
 
 ## Routing
 
@@ -43,6 +44,10 @@ Admin routes are protected by Firebase Authentication and the `users/{uid}` Fire
 4. Admin forms save validated data to Firestore.
 5. Admins paste Cloudinary or other HTTPS image URLs into product, category, and settings forms.
 6. Optional Firebase Storage uploads convert images to WebP in the browser and save returned URLs back to Firestore if Storage is enabled later.
+
+Public queries only request documents permitted by Firestore rules. Products use `available == true` and `active == true`; categories use `active == true`. Sorting happens in the app to avoid composite indexes for the initial catalogue size.
+
+Public images are rendered through an optimized image component that creates responsive Cloudinary/Unsplash URLs, uses browser lazy loading, and shows blur placeholders while full images load.
 
 ## Future E-Commerce Expansion
 

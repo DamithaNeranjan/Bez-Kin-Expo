@@ -4,9 +4,11 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   serverTimestamp,
   setDoc,
-  updateDoc
+  updateDoc,
+  where
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { seedCategories, seedProducts, seedSettings } from "../data/seedData";
@@ -22,7 +24,8 @@ export async function getCategories(includeInactive = false): Promise<Category[]
     return seedCategories.filter((category) => includeInactive || category.active).sort((a, b) => a.order - b.order);
   }
 
-  const snapshot = await getDocs(collection(db, "categories"));
+  const categoryQuery = includeInactive ? collection(db, "categories") : query(collection(db, "categories"), where("active", "==", true));
+  const snapshot = await getDocs(categoryQuery);
   return snapshot.docs
     .map((categoryDoc) => ({ id: categoryDoc.id, ...categoryDoc.data() }) as Category)
     .filter((category) => includeInactive || category.active)
@@ -36,20 +39,23 @@ export async function getProducts(includeUnavailable = false): Promise<Product[]
       .sort((a, b) => Number(b.featured) - Number(a.featured) || a.name.localeCompare(b.name));
   }
 
-  const snapshot = await getDocs(collection(db, "products"));
+  const productQuery = includeUnavailable
+    ? collection(db, "products")
+    : query(collection(db, "products"), where("available", "==", true), where("active", "==", true));
+  const snapshot = await getDocs(productQuery);
   return snapshot.docs
     .map((productDoc) => ({ id: productDoc.id, ...productDoc.data() }) as Product)
     .filter((product) => includeUnavailable || (product.available && product.active))
     .sort((a, b) => Number(b.featured) - Number(a.featured) || a.name.localeCompare(b.name));
 }
 
-export async function getCategoryBySlug(slug: string) {
-  const categories = await getCategories(true);
+export async function getCategoryBySlug(slug: string, includeInactive = false) {
+  const categories = await getCategories(includeInactive);
   return categories.find((category) => category.slug === slug) ?? null;
 }
 
-export async function getProductBySlug(slug: string) {
-  const products = await getProducts(true);
+export async function getProductBySlug(slug: string, includeUnavailable = false) {
+  const products = await getProducts(includeUnavailable);
   return products.find((product) => product.slug === slug) ?? null;
 }
 

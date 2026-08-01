@@ -57,6 +57,30 @@ Useful transformations:
 - `w_1200`: resize to 1200px wide.
 - `c_fill,w_800,h_600`: crop to a fixed display size.
 
+The app also adds responsive image transformations automatically for public pages. If a Cloudinary URL is pasted into Firestore, the frontend requests smaller `f_auto,q_auto,c_limit,w_*` versions for cards, detail pages, and thumbnails. Unsplash placeholder URLs are also resized automatically.
+
+## Recommended Upload Sizes
+
+Upload clear originals with enough detail, then let Cloudinary and the app request smaller display sizes.
+
+- Product cover and gallery images: `4:3`, recommended `1600 x 1200`, minimum `1200 x 900`.
+- Category cards: `16:10`, recommended `1600 x 1000`, minimum `1200 x 750`.
+- Category detail banners: wide landscape, recommended `1800 x 1000`.
+- Company logo: current wide logo style, ideally at least `800px` wide.
+- Maximum original width: keep under `2500px` unless a specific product image needs more detail.
+
+## Public Loading Behaviour
+
+Public catalogue images use:
+
+- Responsive `srcset` and `sizes`.
+- Browser lazy loading for below-the-fold images.
+- Eager/high-priority loading for hero/detail primary images.
+- Async decoding.
+- Blur-up placeholders based on tiny optimized versions of the same image.
+
+This improves perceived loading speed without storing generated placeholder files in Firestore.
+
 ## Image Preparation
 
 Before uploading:

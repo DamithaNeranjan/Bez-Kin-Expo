@@ -5,6 +5,7 @@ import { CategoryCard } from "../components/catalog/CategoryCard";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { Seo } from "../components/Seo";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { OptimizedImage } from "../components/ui/OptimizedImage";
 import { getCategories, getProducts, getSiteSettings } from "../services/catalogService";
 import { seedSettings } from "../data/seedData";
 import type { Category, Product, SiteSettings } from "../types/catalog";
@@ -35,10 +36,15 @@ export function Home() {
       <main>
         <section className="relative overflow-hidden bg-ink text-white">
           <div className="absolute inset-0">
-            <img
+            <OptimizedImage
               src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1800&q=80"
               alt=""
               className="h-full w-full object-cover opacity-25"
+              loading="eager"
+              fetchPriority="high"
+              sizes="100vw"
+              widthHint={1600}
+              widths={[800, 1200, 1600, 2000]}
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/95 to-ink/70" />
@@ -70,7 +76,7 @@ export function Home() {
                 ) : null}
                 {!loading ? categories.slice(0, 4).map((category) => (
                   <Link key={category.id} to={`/categories/${category.slug}`} className="overflow-hidden rounded-md border border-slate-200 bg-white text-ink shadow-sm">
-                    <img src={category.image} alt={category.name} className="h-28 w-full object-cover" />
+                    <OptimizedImage src={category.image} alt={category.name} className="h-28 w-full object-cover" sizes="(min-width: 1024px) 170px, 50vw" widthHint={320} />
                     <span className="block px-3 py-2 text-sm font-bold">{category.name}</span>
                   </Link>
                 )) : null}

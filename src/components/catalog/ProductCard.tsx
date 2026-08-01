@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { OptimizedImage } from "../ui/OptimizedImage";
 import type { Category, Product } from "../../types/catalog";
 
 export function ProductCard({ product, category }: { product: Product; category?: Category }) {
@@ -6,11 +7,12 @@ export function ProductCard({ product, category }: { product: Product; category?
     <article className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
       <Link to={`/products/${product.slug}`} className="block">
         <div className="aspect-[4/3] overflow-hidden bg-slate-100">
-          <img
+          <OptimizedImage
             src={product.coverImage}
             alt={product.name}
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-            loading="lazy"
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+            widthHint={640}
           />
         </div>
         <div className="p-4">

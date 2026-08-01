@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { Seo } from "../components/Seo";
 import { LoadingState } from "../components/ui/LoadingSpinner";
+import { OptimizedImage } from "../components/ui/OptimizedImage";
 import { getCategories, getCategoryBySlug, getProducts } from "../services/catalogService";
 import type { Category, Product } from "../types/catalog";
 
@@ -52,7 +53,13 @@ export function CategoryProducts() {
         </Link>
         <section className="mt-8 overflow-hidden rounded-lg bg-ink text-white">
           <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
-            <img src={category.image} alt={category.name} className="h-72 w-full object-cover lg:h-full" />
+            <OptimizedImage
+              src={category.image}
+              alt={category.name}
+              className="h-72 w-full object-cover lg:h-full"
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              widthHint={1000}
+            />
             <div className="p-8 lg:p-12">
               <p className="text-sm font-bold uppercase tracking-wide text-harvest">Sri Lankan range</p>
               <h1 className="mt-2 text-4xl font-black">{category.name}</h1>

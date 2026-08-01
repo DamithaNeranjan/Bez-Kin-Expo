@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { Seo } from "../components/Seo";
 import { LoadingState } from "../components/ui/LoadingSpinner";
+import { OptimizedImage } from "../components/ui/OptimizedImage";
 import { getCategories, getProductBySlug, getProducts } from "../services/catalogService";
 import type { Category, Product } from "../types/catalog";
 
@@ -73,12 +74,20 @@ export function ProductDetails() {
         <section className="mt-8 grid gap-10 lg:grid-cols-[1fr_0.85fr]">
           <div>
             <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-              <img src={product.coverImage} alt={product.name} className="aspect-[4/3] w-full object-cover" />
+              <OptimizedImage
+                src={product.coverImage}
+                alt={product.name}
+                className="aspect-[4/3] w-full object-cover"
+                loading="eager"
+                fetchPriority="high"
+                sizes="(min-width: 1024px) 55vw, 100vw"
+                widthHint={1200}
+              />
             </div>
             {product.images.length > 1 ? (
               <div className="mt-4 grid grid-cols-4 gap-3">
                 {product.images.map((image) => (
-                  <img key={image} src={image} alt="" className="aspect-square rounded-md object-cover" loading="lazy" />
+                  <OptimizedImage key={image} src={image} alt="" className="aspect-square rounded-md object-cover" sizes="25vw" widthHint={320} />
                 ))}
               </div>
             ) : null}

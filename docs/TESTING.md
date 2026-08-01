@@ -13,12 +13,15 @@ npm run build
 ## Public Website Scenarios
 
 - Home page renders hero, categories, featured products, about summary, and contact information.
+- Public pages show loading spinners while Firestore data is loading.
 - Products page supports search by name, tag, brand, and origin.
 - Products page filters by category.
 - Products page sorts by featured, name, price low to high, and price high to low.
 - Products page paginates without loading every product into a long view.
 - Product detail pages use clean slugs and render product metadata.
+- Product/category detail pages load only public-safe active/available records.
 - Category pages show only products in that category.
+- Public catalogue images use responsive optimized URLs and blur placeholders before full images load.
 - Contact page renders company contact details and a map iframe.
 - Mobile navigation opens and closes cleanly.
 
@@ -30,6 +33,8 @@ npm run build
 - Administrators can create, edit, delete, activate, feature, and mark products available.
 - Administrators can create, edit, delete, activate, and reorder categories.
 - Administrators can update company settings.
+- Admin forms show success and failure feedback after save, delete, upload, and validation-blocked submissions.
+- Admin pages and submit buttons show loading spinners during data loads and saves.
 - Cloudinary or other HTTPS image URLs save correctly to Firestore and render on public pages.
 - Firebase Storage upload buttons are only tested if Storage is enabled later.
 
@@ -38,8 +43,8 @@ npm run build
 Use Firebase Emulator Suite to verify:
 
 - Public reads of active categories and available products are allowed.
+- Public reads of inactive categories, inactive products, or unavailable products are denied.
 - Public writes to Firestore are denied.
-- Public Firestore writes are denied.
 - Administrator Firestore writes are allowed.
 - Active administrators can create, update, and delete catalogue data.
 - Inactive users and non-administrators cannot write catalogue data.

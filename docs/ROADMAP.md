@@ -10,6 +10,8 @@
 - Product, category, and settings management.
 - Firebase Hosting, Firestore, Authentication, and security rules.
 - Cloudinary/external image URL workflow for no-card image hosting.
+- Responsive public image optimization with blur-up placeholders.
+- Public/admin loading spinners and admin form success/error feedback.
 - Optional Firebase Storage upload helper retained for a later billing-enabled upgrade.
 - SEO metadata, robots file, and starter sitemap.
 
@@ -19,7 +21,6 @@
 - Add route-level code splitting to reduce initial bundle size.
 - Add richer sitemap generation after real product data is loaded.
 - Add admin user management UI.
-- Add a Cloudinary URL helper for consistent `300px`, `800px`, and `1200px` image variants.
 - Disable or hide Firebase Storage upload buttons unless Storage is configured.
 - Add analytics after the Firebase project is connected.
 
