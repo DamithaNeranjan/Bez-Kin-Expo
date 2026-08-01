@@ -5,6 +5,7 @@ type OptimizedImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "sr
   src: string;
   widthHint?: number;
   widths?: number[];
+  fill?: boolean;
 };
 
 export function OptimizedImage({
@@ -16,6 +17,7 @@ export function OptimizedImage({
   decoding = "async",
   fetchPriority,
   className = "",
+  fill = true,
   style,
   onLoad,
   ...props
@@ -54,7 +56,9 @@ export function OptimizedImage({
           setLoaded(true);
           onLoad?.(event);
         }}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`${fill ? "absolute inset-0 h-full w-full object-cover" : "relative max-h-full max-w-full object-contain"} transition-opacity duration-500 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
       />
     </span>
   );
