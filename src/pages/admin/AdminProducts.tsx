@@ -69,6 +69,22 @@ export function AdminProducts() {
     }
   }, [form, id, name]);
 
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      setMessage((currentMessage) => (currentMessage?.status === "success" ? null : currentMessage));
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  useEffect(() => {
+    if (message?.status !== "success") {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => setMessage(null), 3500);
+    return () => window.clearTimeout(timeoutId);
+  }, [message]);
+
   const load = useCallback(() =>
     Promise.all([getProducts(true), getCategories(true)]).then(([nextProducts, nextCategories]) => {
       setProducts(nextProducts);
