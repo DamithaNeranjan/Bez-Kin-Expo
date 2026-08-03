@@ -220,12 +220,10 @@ export const seedSettings: SiteSettings = {
   logo: "/bezkin-logo.jpeg",
   phone: "+44 77 2323 8966",
   email: "admin@bez-kin.com",
-  address: "Unit 14, Meridian Trade Park, London, UK",
   facebook: "https://facebook.com",
   instagram: "https://instagram.com",
-  whatsApp: "https://wa.me/442079460820",
+  whatsApp: "https://whatsapp.com/channel/0029Vb6elFkDJ6H8BG2mbT0K",
   businessHours: "Monday to Friday, 9:00 to 17:30",
-  mapEmbedUrl: "https://www.google.com/maps?q=London%20UK&output=embed",
   about:
     "Bez-Kin Expo Ltd brings the authentic flavours of Sri Lanka to the UK, supplying groceries, fragrant spices, snacks, tea, staples, and frozen favourites for retailers, caterers, and families who want a real taste of home."
 };

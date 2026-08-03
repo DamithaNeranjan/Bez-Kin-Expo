@@ -91,7 +91,9 @@ export function PublicLayout() {
             <h2 className="text-sm font-bold uppercase tracking-wide text-harvest">Contact</h2>
             <p className="mt-3 text-sm text-white/85">{settings.phone}</p>
             <p className="mt-1 text-sm text-white/85">{settings.email}</p>
-            <p className="mt-1 text-sm text-white/85">{settings.address}</p>
+            <a href={settings.whatsApp} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-semibold text-harvest hover:text-white">
+              WhatsApp channel
+            </a>
           </div>
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wide text-harvest">Hours</h2>

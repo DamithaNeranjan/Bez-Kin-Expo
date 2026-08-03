@@ -16,12 +16,10 @@ const settingsSchema = z.object({
   logo: z.string().min(1),
   phone: z.string().min(3),
   email: z.string().email(),
-  address: z.string().min(5),
   facebook: z.string().url().or(z.literal("")),
   instagram: z.string().url().or(z.literal("")),
   whatsApp: z.string().url().or(z.literal("")),
   businessHours: z.string().min(3),
-  mapEmbedUrl: z.string().url(),
   about: z.string().min(20)
 });
 
@@ -99,10 +97,8 @@ export function AdminSettings() {
         </label>
         <Input label="Facebook" {...form.register("facebook")} error={form.formState.errors.facebook?.message} />
         <Input label="Instagram" {...form.register("instagram")} error={form.formState.errors.instagram?.message} />
-        <Input label="WhatsApp" {...form.register("whatsApp")} error={form.formState.errors.whatsApp?.message} />
+        <Input label="WhatsApp channel URL" {...form.register("whatsApp")} error={form.formState.errors.whatsApp?.message} />
         <Input label="Business hours" {...form.register("businessHours")} error={form.formState.errors.businessHours?.message} />
-        <Input label="Google Map embed URL" {...form.register("mapEmbedUrl")} error={form.formState.errors.mapEmbedUrl?.message} wrapperClassName="md:col-span-2" />
-        <Textarea label="Address" {...form.register("address")} error={form.formState.errors.address?.message} />
         <Textarea label="About company" {...form.register("about")} error={form.formState.errors.about?.message} />
         <FormFeedback message={message} className="md:col-span-2" />
         <div className="md:col-span-2">

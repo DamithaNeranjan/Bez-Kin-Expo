@@ -143,8 +143,12 @@ export function Home() {
                 <dd className="text-slate-800">{settings.email}</dd>
               </div>
               <div>
-                <dt className="font-bold text-slate-500">Address</dt>
-                <dd className="text-slate-800">{settings.address}</dd>
+                <dt className="font-bold text-slate-500">WhatsApp</dt>
+                <dd>
+                  <a href={settings.whatsApp} target="_blank" rel="noreferrer" className="font-semibold text-leaf hover:text-ink">
+                    Follow our WhatsApp channel
+                  </a>
+                </dd>
               </div>
             </dl>
           </div>

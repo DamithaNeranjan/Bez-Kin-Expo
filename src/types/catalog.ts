@@ -40,12 +40,10 @@ export type SiteSettings = {
   logo: string;
   phone: string;
   email: string;
-  address: string;
   facebook: string;
   instagram: string;
   whatsApp: string;
   businessHours: string;
-  mapEmbedUrl: string;
   about: string;
 };
 

@@ -57,7 +57,7 @@
 
 ### `settings/site`
 
-Stores editable company profile fields: company name, logo, phone, email, address, social links, WhatsApp link, business hours, map embed URL, and about copy.
+Stores editable company profile fields: company name, logo, phone, email, social links, WhatsApp channel link, business hours, and about copy.
 
 ## Reserved Future Collections
 

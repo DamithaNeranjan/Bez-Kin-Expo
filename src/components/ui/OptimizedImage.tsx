@@ -26,8 +26,8 @@ export function OptimizedImage({
   const priorityProps = fetchPriority ? ({ fetchpriority: fetchPriority } as Record<string, string>) : {};
   const placeholderUrl = optimizeImageUrl(src, 48);
   const wrapperStyle = {
-    ...style,
-    backgroundColor: "#e2e8f0"
+    backgroundColor: "#e2e8f0",
+    ...style
   };
   const placeholderStyle = placeholderUrl
     ? {

@@ -1,16 +1,27 @@
 import { Link } from "react-router-dom";
 import { OptimizedImage } from "../ui/OptimizedImage";
 import type { Category, Product } from "../../types/catalog";
+import { optimizeImageUrl } from "../../utils/imageUrl";
 
 export function ProductCard({ product, category }: { product: Product; category?: Category }) {
+  const ambientImage = optimizeImageUrl(product.coverImage, 96);
+
   return (
     <article className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
       <Link to={`/products/${product.slug}`} className="block">
-        <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 scale-150 bg-cover bg-center opacity-45 blur-2xl saturate-150"
+            style={{ backgroundImage: ambientImage ? `url("${ambientImage}")` : undefined }}
+          />
+          <span aria-hidden="true" className="absolute inset-0 bg-white/35" />
           <OptimizedImage
             src={product.coverImage}
             alt={product.name}
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            className="relative z-10 flex h-full w-full items-center justify-center p-3 transition duration-300 group-hover:scale-105"
+            fill={false}
+            style={{ backgroundColor: "transparent" }}
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
             widthHint={640}
           />

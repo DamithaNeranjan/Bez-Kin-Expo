@@ -1,5 +1,5 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { Seo } from "../components/Seo";
@@ -16,6 +16,15 @@ export function ProductDetails() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
+  const [magnifier, setMagnifier] = useState<{
+    x: number;
+    y: number;
+    backgroundX: number;
+    backgroundY: number;
+    backgroundWidth: number;
+    backgroundHeight: number;
+  } | null>(null);
+  const mainImageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -38,6 +47,44 @@ export function ProductDetails() {
     () => products.filter((item) => item.categoryId === product?.categoryId && item.id !== product?.id).slice(0, 4),
     [product?.categoryId, product?.id, products]
   );
+  const mainImage = galleryImages[0] ?? product?.coverImage ?? "";
+
+  const handleMainImageMouseMove = (event: MouseEvent<HTMLDivElement>) => {
+    const container = mainImageRef.current;
+    const image = container?.querySelector("img");
+
+    if (!container || !image) {
+      setMagnifier(null);
+      return;
+    }
+
+    const containerRect = container.getBoundingClientRect();
+    const imageRect = image.getBoundingClientRect();
+    const imageX = event.clientX - imageRect.left;
+    const imageY = event.clientY - imageRect.top;
+
+    if (imageRect.width === 0 || imageRect.height === 0 || imageX < 0 || imageY < 0 || imageX > imageRect.width || imageY > imageRect.height) {
+      setMagnifier(null);
+      return;
+    }
+
+    const lensSize = 180;
+    const zoom = 2.4;
+    const pointerX = event.clientX - containerRect.left;
+    const pointerY = event.clientY - containerRect.top;
+    const minOffset = 8;
+    const maxX = Math.max(minOffset, containerRect.width - lensSize - minOffset);
+    const maxY = Math.max(minOffset, containerRect.height - lensSize - minOffset);
+
+    setMagnifier({
+      x: Math.min(Math.max(pointerX - lensSize / 2, minOffset), maxX),
+      y: Math.min(Math.max(pointerY - lensSize / 2, minOffset), maxY),
+      backgroundX: -(imageX * zoom - lensSize / 2),
+      backgroundY: -(imageY * zoom - lensSize / 2),
+      backgroundWidth: imageRect.width * zoom,
+      backgroundHeight: imageRect.height * zoom
+    });
+  };
 
   useEffect(() => {
     if (activeImageIndex === null || galleryImages.length === 0) {
@@ -109,16 +156,38 @@ export function ProductDetails() {
         </Link>
         <section className="mt-8 grid gap-10 lg:grid-cols-[1fr_0.85fr]">
           <div>
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+            <div
+              ref={mainImageRef}
+              onMouseMove={handleMainImageMouseMove}
+              onMouseLeave={() => setMagnifier(null)}
+              className="relative overflow-hidden rounded-lg border border-slate-200 bg-white"
+            >
               <OptimizedImage
-                src={galleryImages[0] ?? product.coverImage}
+                src={mainImage}
                 alt={product.name}
-                className="aspect-[4/3] w-full object-cover"
+                className="flex aspect-[4/3] w-full cursor-zoom-in items-center justify-center bg-slate-100 p-4"
+                fill={false}
                 loading="eager"
                 fetchPriority="high"
                 sizes="(min-width: 1024px) 55vw, 100vw"
                 widthHint={1200}
               />
+              {magnifier ? (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute z-10 hidden rounded-full border-2 border-white bg-white shadow-soft ring-1 ring-ink/20 lg:block"
+                  style={{
+                    height: 180,
+                    left: magnifier.x,
+                    top: magnifier.y,
+                    width: 180,
+                    backgroundImage: `url("${optimizeImageUrl(mainImage, 1600)}")`,
+                    backgroundPosition: `${magnifier.backgroundX}px ${magnifier.backgroundY}px`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: `${magnifier.backgroundWidth}px ${magnifier.backgroundHeight}px`
+                  }}
+                />
+              ) : null}
             </div>
             {product.images.length > 1 ? (
               <div className="mt-4 grid grid-cols-4 gap-3">

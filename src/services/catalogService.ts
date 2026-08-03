@@ -129,7 +129,19 @@ export async function saveSiteSettings(settings: SiteSettings) {
     throw new Error("Firebase Firestore is not configured yet.");
   }
 
-  await setDoc(doc(db, "settings", "site"), settings, { merge: true });
+  const payload: SiteSettings = {
+    companyName: settings.companyName,
+    logo: settings.logo,
+    phone: settings.phone,
+    email: settings.email,
+    facebook: settings.facebook,
+    instagram: settings.instagram,
+    whatsApp: settings.whatsApp,
+    businessHours: settings.businessHours,
+    about: settings.about
+  };
+
+  await setDoc(doc(db, "settings", "site"), payload);
 }
 
 export async function ensureAdminProfile(uid: string, email: string, name: string) {
