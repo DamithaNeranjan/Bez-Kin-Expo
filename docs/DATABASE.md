@@ -59,6 +59,24 @@
 
 Stores editable company profile fields: company name, logo, phone, email, social links, WhatsApp channel link, business hours, and about copy.
 
+### `auditLogs/{auditLogId}`
+
+```json
+{
+  "action": "update",
+  "entityType": "product",
+  "entityId": "ceylon-black-tea",
+  "entityName": "Ceylon Black Tea",
+  "actorUid": "firebase-auth-uid",
+  "actorEmail": "admin@example.co.uk",
+  "actorName": "Admin User",
+  "summary": "Updated product \"Ceylon Black Tea\".",
+  "createdAt": "2026-08-07T10:30:00.000Z"
+}
+```
+
+Audit logs are written for administrator logins, denied admin login attempts, successful product/category/settings changes, and admin image uploads. Audit rows are immutable: administrators can read and create entries, but entries cannot be updated or deleted through Firestore rules.
+
 ## Reserved Future Collections
 
 These are intentionally not implemented in V1:
@@ -103,5 +121,6 @@ Firebase Storage is not required for the no-card setup. If the project is later 
 - Public visitors can read active catalogue content and external public image URLs.
 - Public visitors cannot create, edit, or delete data.
 - Administrators can manage products, categories, settings, users, and image URL fields.
+- Administrators can read audit logs. Product, category, settings, and login actions create immutable audit entries.
 - Administrator access requires Firebase Auth plus an active `users/{uid}` document with `role: "administrator"`.
 - Public catalogue queries must include rule-compatible filters. Categories are queried with `active == true`; products are queried with `available == true` and `active == true`, then sorted in the app to avoid composite index requirements.

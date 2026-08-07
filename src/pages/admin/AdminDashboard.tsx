@@ -34,12 +34,6 @@ export function AdminDashboard() {
         <MetricCard to="/admin/categories" icon={<Tags className="h-5 w-5" />} label="Categories" value={String(categories.length)} />
         <MetricCard to="/admin/settings" icon={<Settings className="h-5 w-5" />} label="Company" value={settings?.companyName ?? "Settings"} />
       </div> : null}
-      <section className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-bold">Firebase setup note</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          Seed data is used until Firebase environment variables are configured. Once connected, these modules read and write Firestore and Storage directly.
-        </p>
-      </section>
     </div>
   );
 }

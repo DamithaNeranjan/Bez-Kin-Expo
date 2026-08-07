@@ -7,7 +7,9 @@ React, Vite, Tailwind, and Firebase catalogue site for a UK business importing S
 - Public pages for home, products, product details, categories, about, and contact.
 - Product search, category filtering, sorting, and pagination.
 - Clean slug routes with metadata, OpenGraph/Twitter tags, and Product JSON-LD.
-- Hidden admin dashboard for products, categories, and settings.
+- Hidden admin dashboard for products, categories, settings, and audit trail review.
+- Admin product/category tables with pagination and clickable column sorting.
+- Admin product-name filtering and audit keyword/area/action filtering.
 - Google Authentication gate backed by `users/{uid}` Firestore documents.
 - Firestore rules for public reads and administrator-only writes.
 - External image URL support, recommended with Cloudinary Free for a no-card setup.
@@ -77,6 +79,7 @@ Firestore collections:
 - `products`
 - `users`
 - `settings/site`
+- `auditLogs`
 
 Reserved future collections are not created in V1: `orders`, `customers`, `payments`, `reviews`, `wishlist`, and `cart`.
 
@@ -111,4 +114,4 @@ npm run build
 firebase emulators:start
 ```
 
-Use the emulator UI to confirm public reads, denied public writes, and administrator CRUD. Storage rule checks are only needed if Firebase Storage is enabled later.
+Use the emulator UI to confirm public reads, denied public writes, administrator CRUD, and administrator-only audit log reads. Storage rule checks are only needed if Firebase Storage is enabled later.

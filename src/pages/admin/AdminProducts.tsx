@@ -1,11 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, Plus, Trash2, Upload } from "lucide-react";
+import { Edit, Plus, Search, Trash2, Upload } from "lucide-react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FormFeedback, type FormFeedbackMessage } from "../../components/admin/FormFeedback";
+import { PaginationControls, SortableHeader, type SortDirection } from "../../components/admin/TableControls";
 import { LoadingSpinner, LoadingState } from "../../components/ui/LoadingSpinner";
+import { useAuth } from "../../contexts/AuthContext";
+import { buildActor, recordAuditLog } from "../../services/auditService";
 import { deleteProduct, getCategories, getProducts, saveProduct } from "../../services/catalogService";
 import { uploadImage } from "../../services/storageService";
 import type { Category, Product } from "../../types/catalog";
@@ -32,6 +35,9 @@ const productSchema = z.object({
 });
 
 type ProductForm = z.infer<typeof productSchema>;
+type ProductSortKey = "coverImage" | "name" | "category" | "price" | "state";
+
+const pageSize = 10;
 
 const emptyProduct: ProductForm = {
   id: "",
@@ -59,6 +65,11 @@ export function AdminProducts() {
   const [message, setMessage] = useState<FormFeedbackMessage>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [productFilter, setProductFilter] = useState("");
+  const [sortKey, setSortKey] = useState<ProductSortKey>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [page, setPage] = useState(1);
+  const { user, profile } = useAuth();
   const form = useForm<ProductForm>({ resolver: zodResolver(productSchema), defaultValues: emptyProduct });
   const name = form.watch("name");
   const id = form.watch("id");
@@ -100,15 +111,57 @@ export function AdminProducts() {
   }, [load]);
 
   const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
+  const sortedProducts = useMemo(() => {
+    const normalizedFilter = productFilter.trim().toLowerCase();
+    const filteredProducts = normalizedFilter
+      ? products.filter((product) => product.name.toLowerCase().includes(normalizedFilter))
+      : products;
+
+    return [...filteredProducts].sort((first, second) => {
+      const direction = sortDirection === "asc" ? 1 : -1;
+      const firstValue = getProductSortValue(first, sortKey, categoryMap);
+      const secondValue = getProductSortValue(second, sortKey, categoryMap);
+
+      if (typeof firstValue === "number" && typeof secondValue === "number") {
+        return (firstValue - secondValue) * direction;
+      }
+
+      return String(firstValue).localeCompare(String(secondValue), undefined, { numeric: true, sensitivity: "base" }) * direction;
+    });
+  }, [categoryMap, productFilter, products, sortDirection, sortKey]);
+  const pageCount = Math.max(1, Math.ceil(sortedProducts.length / pageSize));
+  const pagedProducts = useMemo(() => sortedProducts.slice((page - 1) * pageSize, page * pageSize), [page, sortedProducts]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [productFilter]);
+
+  useEffect(() => {
+    setPage((currentPage) => Math.min(currentPage, pageCount));
+  }, [pageCount]);
+
+  const toggleSort = (nextSortKey: ProductSortKey) => {
+    setPage(1);
+    setSortKey((currentSortKey) => {
+      if (currentSortKey === nextSortKey) {
+        setSortDirection((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"));
+        return currentSortKey;
+      }
+
+      setSortDirection("asc");
+      return nextSortKey;
+    });
+  };
 
   const onSubmit = form.handleSubmit(
     async (values) => {
       setMessage(null);
       try {
+        const isUpdate = Boolean(values.id);
         const images = values.imageList
           ? values.imageList.split("\n").map((value) => value.trim()).filter(Boolean)
           : [values.coverImage];
-        await saveProduct({
+        const productId = await saveProduct({
           id: values.id ?? "",
           name: values.name,
           slug: slugify(values.slug),
@@ -130,6 +183,14 @@ export function AdminProducts() {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });
+        await recordAuditLog({
+          ...buildActor(user, profile),
+          action: isUpdate ? "update" : "create",
+          entityType: "product",
+          entityId: productId,
+          entityName: values.name,
+          summary: `${isUpdate ? "Updated" : "Created"} product "${values.name}".`
+        }).catch(() => undefined);
         await load();
         form.reset({ ...emptyProduct, categoryId: categories[0]?.id ?? "" });
         setMessage({ status: "success", text: "Product saved successfully." });
@@ -154,6 +215,14 @@ export function AdminProducts() {
     if (!window.confirm(`Delete ${product.name}?`)) return;
     try {
       await deleteProduct(product.id);
+      await recordAuditLog({
+        ...buildActor(user, profile),
+        action: "delete",
+        entityType: "product",
+        entityId: product.id,
+        entityName: product.name,
+        summary: `Deleted product "${product.name}".`
+      }).catch(() => undefined);
       await load();
       setMessage({ status: "success", text: "Product deleted successfully." });
     } catch (error) {
@@ -170,6 +239,14 @@ export function AdminProducts() {
       const url = await uploadImage(file, `products/${productId}/cover.webp`);
       form.setValue("coverImage", url, { shouldValidate: true });
       form.setValue("imageList", [url, form.getValues("imageList")].filter(Boolean).join("\n"));
+      await recordAuditLog({
+        ...buildActor(user, profile),
+        action: "upload",
+        entityType: "product",
+        entityId: productId,
+        entityName: form.getValues("name") || "Product form",
+        summary: `Uploaded cover image for "${form.getValues("name") || productId}".`
+      }).catch(() => undefined);
       setMessage({ status: "success", text: "Cover image uploaded and added to the form." });
     } catch (error) {
       setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not upload image." });
@@ -246,43 +323,84 @@ export function AdminProducts() {
       </section>
       <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 p-5">
-          <h2 className="text-xl font-black">Products</h2>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <h2 className="text-xl font-black">Products</h2>
+            <label className="relative block w-full lg:max-w-xs">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={productFilter}
+                onChange={(event) => setProductFilter(event.target.value)}
+                placeholder="Filter by product name"
+                className="h-10 w-full rounded-md border border-slate-200 pl-9 pr-3 text-sm focus-ring"
+              />
+            </label>
+          </div>
         </div>
         {loading ? <div className="p-5"><LoadingState label="Loading products..." /></div> : null}
-        {!loading ? <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Image</th>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Price</th>
-                <th className="px-4 py-3">State</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {products.map((product) => (
-                <tr key={product.id}>
-                  <td className="px-4 py-3"><img src={product.coverImage} alt="" className="h-12 w-12 rounded-md object-cover" /></td>
-                  <td className="px-4 py-3 font-semibold">{product.name}</td>
-                  <td className="px-4 py-3">{categoryMap.get(product.categoryId)?.name ?? product.categoryId}</td>
-                  <td className="px-4 py-3">GBP {product.price.toFixed(2)}</td>
-                  <td className="px-4 py-3">{product.available ? "Available" : "Unavailable"}{product.featured ? " / Featured" : ""}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => editProduct(product)} className="h-9 w-9 rounded-md border border-slate-200" title="Edit product"><Edit className="mx-auto h-4 w-4" /></button>
-                      <button type="button" onClick={() => void removeProduct(product)} className="h-9 w-9 rounded-md border border-slate-200 text-berry" title="Delete product"><Trash2 className="mx-auto h-4 w-4" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div> : null}
+        {!loading ? (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3">
+                      <SortableHeader label="Image" active={sortKey === "coverImage"} direction={sortDirection} onClick={() => toggleSort("coverImage")} />
+                    </th>
+                    <th className="px-4 py-3">
+                      <SortableHeader label="Name" active={sortKey === "name"} direction={sortDirection} onClick={() => toggleSort("name")} />
+                    </th>
+                    <th className="px-4 py-3">
+                      <SortableHeader label="Category" active={sortKey === "category"} direction={sortDirection} onClick={() => toggleSort("category")} />
+                    </th>
+                    <th className="px-4 py-3">
+                      <SortableHeader label="Price" active={sortKey === "price"} direction={sortDirection} onClick={() => toggleSort("price")} />
+                    </th>
+                    <th className="px-4 py-3">
+                      <SortableHeader label="State" active={sortKey === "state"} direction={sortDirection} onClick={() => toggleSort("state")} />
+                    </th>
+                    <th className="px-4 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {pagedProducts.map((product) => (
+                    <tr key={product.id}>
+                      <td className="px-4 py-3"><img src={product.coverImage} alt="" className="h-12 w-12 rounded-md object-cover" /></td>
+                      <td className="px-4 py-3 font-semibold">{product.name}</td>
+                      <td className="px-4 py-3">{categoryMap.get(product.categoryId)?.name ?? product.categoryId}</td>
+                      <td className="px-4 py-3">GBP {product.price.toFixed(2)}</td>
+                      <td className="px-4 py-3">{product.available ? "Available" : "Unavailable"}{product.featured ? " / Featured" : ""}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => editProduct(product)} className="h-9 w-9 rounded-md border border-slate-200" title="Edit product"><Edit className="mx-auto h-4 w-4" /></button>
+                          <button type="button" onClick={() => void removeProduct(product)} className="h-9 w-9 rounded-md border border-slate-200 text-berry" title="Delete product"><Trash2 className="mx-auto h-4 w-4" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {!pagedProducts.length ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-10 text-center font-semibold text-slate-500">
+                        No products match the current filter.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+            <PaginationControls page={page} pageSize={pageSize} totalItems={sortedProducts.length} itemLabel="products" onPageChange={setPage} />
+          </>
+        ) : null}
       </section>
     </div>
   );
+}
+
+function getProductSortValue(product: Product, sortKey: ProductSortKey, categoryMap: Map<string, Category>) {
+  if (sortKey === "coverImage") return product.coverImage;
+  if (sortKey === "name") return product.name;
+  if (sortKey === "category") return categoryMap.get(product.categoryId)?.name ?? product.categoryId;
+  if (sortKey === "price") return product.price;
+  return `${product.available ? "Available" : "Unavailable"} ${product.featured ? "Featured" : ""} ${product.active ? "Active" : "Inactive"}`;
 }
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string };

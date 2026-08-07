@@ -6,7 +6,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FormFeedback, type FormFeedbackMessage } from "../../components/admin/FormFeedback";
 import { LoadingSpinner, LoadingState } from "../../components/ui/LoadingSpinner";
+import { useAuth } from "../../contexts/AuthContext";
 import { seedSettings } from "../../data/seedData";
+import { buildActor, recordAuditLog } from "../../services/auditService";
 import { getSiteSettings, saveSiteSettings } from "../../services/catalogService";
 import { uploadImage } from "../../services/storageService";
 import type { SiteSettings } from "../../types/catalog";
@@ -27,6 +29,7 @@ export function AdminSettings() {
   const [message, setMessage] = useState<FormFeedbackMessage>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { user, profile } = useAuth();
   const form = useForm<SiteSettings>({ resolver: zodResolver(settingsSchema), defaultValues: seedSettings });
 
   useEffect(() => {
@@ -57,6 +60,14 @@ export function AdminSettings() {
       setMessage(null);
       try {
         await saveSiteSettings(values);
+        await recordAuditLog({
+          ...buildActor(user, profile),
+          action: "update",
+          entityType: "settings",
+          entityId: "site",
+          entityName: values.companyName,
+          summary: `Updated site settings for "${values.companyName}".`
+        }).catch(() => undefined);
         setMessage({ status: "success", text: "Settings saved successfully." });
       } catch (error) {
         setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not save settings." });
@@ -71,6 +82,14 @@ export function AdminSettings() {
     try {
       const url = await uploadImage(file, "branding/logo.webp");
       form.setValue("logo", url, { shouldValidate: true });
+      await recordAuditLog({
+        ...buildActor(user, profile),
+        action: "upload",
+        entityType: "settings",
+        entityId: "site",
+        entityName: form.getValues("companyName") || "Site settings",
+        summary: `Uploaded logo for "${form.getValues("companyName") || "site settings"}".`
+      }).catch(() => undefined);
       setMessage({ status: "success", text: "Logo uploaded and added to the form." });
     } catch (error) {
       setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not upload logo." });

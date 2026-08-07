@@ -1,11 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Plus, Trash2, Upload } from "lucide-react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
-import { forwardRef, useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FormFeedback, type FormFeedbackMessage } from "../../components/admin/FormFeedback";
+import { PaginationControls, SortableHeader, type SortDirection } from "../../components/admin/TableControls";
 import { LoadingSpinner, LoadingState } from "../../components/ui/LoadingSpinner";
+import { useAuth } from "../../contexts/AuthContext";
+import { buildActor, recordAuditLog } from "../../services/auditService";
 import { deleteCategory, getCategories, saveCategory } from "../../services/catalogService";
 import { uploadImage } from "../../services/storageService";
 import type { Category } from "../../types/catalog";
@@ -22,6 +25,9 @@ const categorySchema = z.object({
 });
 
 type CategoryForm = z.infer<typeof categorySchema>;
+type CategorySortKey = "image" | "name" | "order" | "active";
+
+const pageSize = 10;
 
 const emptyCategory: CategoryForm = {
   id: "",
@@ -38,6 +44,10 @@ export function AdminCategories() {
   const [message, setMessage] = useState<FormFeedbackMessage>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState<CategorySortKey>("order");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [page, setPage] = useState(1);
+  const { user, profile } = useAuth();
   const form = useForm<CategoryForm>({ resolver: zodResolver(categorySchema), defaultValues: emptyCategory });
   const name = form.watch("name");
   const id = form.watch("id");
@@ -74,11 +84,45 @@ export function AdminCategories() {
     void load();
   }, [load]);
 
+  const sortedCategories = useMemo(() => {
+    return [...categories].sort((first, second) => {
+      const direction = sortDirection === "asc" ? 1 : -1;
+      const firstValue = getCategorySortValue(first, sortKey);
+      const secondValue = getCategorySortValue(second, sortKey);
+
+      if (typeof firstValue === "number" && typeof secondValue === "number") {
+        return (firstValue - secondValue) * direction;
+      }
+
+      return String(firstValue).localeCompare(String(secondValue), undefined, { numeric: true, sensitivity: "base" }) * direction;
+    });
+  }, [categories, sortDirection, sortKey]);
+  const pageCount = Math.max(1, Math.ceil(sortedCategories.length / pageSize));
+  const pagedCategories = useMemo(() => sortedCategories.slice((page - 1) * pageSize, page * pageSize), [page, sortedCategories]);
+
+  useEffect(() => {
+    setPage((currentPage) => Math.min(currentPage, pageCount));
+  }, [pageCount]);
+
+  const toggleSort = (nextSortKey: CategorySortKey) => {
+    setPage(1);
+    setSortKey((currentSortKey) => {
+      if (currentSortKey === nextSortKey) {
+        setSortDirection((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"));
+        return currentSortKey;
+      }
+
+      setSortDirection("asc");
+      return nextSortKey;
+    });
+  };
+
   const onSubmit = form.handleSubmit(
     async (values) => {
       setMessage(null);
       try {
-        await saveCategory({
+        const isUpdate = Boolean(values.id);
+        const categoryId = await saveCategory({
           id: values.id ?? "",
           name: values.name,
           slug: slugify(values.slug),
@@ -89,6 +133,14 @@ export function AdminCategories() {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });
+        await recordAuditLog({
+          ...buildActor(user, profile),
+          action: isUpdate ? "update" : "create",
+          entityType: "category",
+          entityId: categoryId,
+          entityName: values.name,
+          summary: `${isUpdate ? "Updated" : "Created"} category "${values.name}".`
+        }).catch(() => undefined);
         await load();
         form.reset({ ...emptyCategory, order: categories.length + 1 });
         setMessage({ status: "success", text: "Category saved successfully." });
@@ -109,6 +161,14 @@ export function AdminCategories() {
     if (!window.confirm(`Delete ${category.name}? Existing products will keep their categoryId.`)) return;
     try {
       await deleteCategory(category.id);
+      await recordAuditLog({
+        ...buildActor(user, profile),
+        action: "delete",
+        entityType: "category",
+        entityId: category.id,
+        entityName: category.name,
+        summary: `Deleted category "${category.name}".`
+      }).catch(() => undefined);
       await load();
       setMessage({ status: "success", text: "Category deleted successfully." });
     } catch (error) {
@@ -124,6 +184,14 @@ export function AdminCategories() {
       const categoryId = form.getValues("id") || slugify(form.getValues("name")) || "new-category";
       const url = await uploadImage(file, `categories/${categoryId}.webp`);
       form.setValue("image", url, { shouldValidate: true });
+      await recordAuditLog({
+        ...buildActor(user, profile),
+        action: "upload",
+        entityType: "category",
+        entityId: categoryId,
+        entityName: form.getValues("name") || "Category form",
+        summary: `Uploaded category image for "${form.getValues("name") || categoryId}".`
+      }).catch(() => undefined);
       setMessage({ status: "success", text: "Category image uploaded and added to the form." });
     } catch (error) {
       setMessage({ status: "error", text: error instanceof Error ? error.message : "Could not upload image." });
@@ -181,38 +249,65 @@ export function AdminCategories() {
           <h2 className="text-xl font-black">Categories</h2>
         </div>
         {loading ? <div className="p-5"><LoadingState label="Loading categories..." /></div> : null}
-        {!loading ? <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Image</th>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Order</th>
-                <th className="px-4 py-3">Active</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {categories.map((category) => (
-                <tr key={category.id}>
-                  <td className="px-4 py-3"><img src={category.image} alt="" className="h-12 w-12 rounded-md object-cover" /></td>
-                  <td className="px-4 py-3 font-semibold">{category.name}</td>
-                  <td className="px-4 py-3">{category.order}</td>
-                  <td className="px-4 py-3">{category.active ? "Yes" : "No"}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => editCategory(category)} className="h-9 w-9 rounded-md border border-slate-200" title="Edit category"><Edit className="mx-auto h-4 w-4" /></button>
-                      <button type="button" onClick={() => void removeCategory(category)} className="h-9 w-9 rounded-md border border-slate-200 text-berry" title="Delete category"><Trash2 className="mx-auto h-4 w-4" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div> : null}
+        {!loading ? (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3">
+                      <SortableHeader label="Image" active={sortKey === "image"} direction={sortDirection} onClick={() => toggleSort("image")} />
+                    </th>
+                    <th className="px-4 py-3">
+                      <SortableHeader label="Name" active={sortKey === "name"} direction={sortDirection} onClick={() => toggleSort("name")} />
+                    </th>
+                    <th className="px-4 py-3">
+                      <SortableHeader label="Order" active={sortKey === "order"} direction={sortDirection} onClick={() => toggleSort("order")} />
+                    </th>
+                    <th className="px-4 py-3">
+                      <SortableHeader label="Active" active={sortKey === "active"} direction={sortDirection} onClick={() => toggleSort("active")} />
+                    </th>
+                    <th className="px-4 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {pagedCategories.map((category) => (
+                    <tr key={category.id}>
+                      <td className="px-4 py-3"><img src={category.image} alt="" className="h-12 w-12 rounded-md object-cover" /></td>
+                      <td className="px-4 py-3 font-semibold">{category.name}</td>
+                      <td className="px-4 py-3">{category.order}</td>
+                      <td className="px-4 py-3">{category.active ? "Yes" : "No"}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => editCategory(category)} className="h-9 w-9 rounded-md border border-slate-200" title="Edit category"><Edit className="mx-auto h-4 w-4" /></button>
+                          <button type="button" onClick={() => void removeCategory(category)} className="h-9 w-9 rounded-md border border-slate-200 text-berry" title="Delete category"><Trash2 className="mx-auto h-4 w-4" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {!pagedCategories.length ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-10 text-center font-semibold text-slate-500">
+                        No categories found.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+            <PaginationControls page={page} pageSize={pageSize} totalItems={sortedCategories.length} itemLabel="categories" onPageChange={setPage} />
+          </>
+        ) : null}
       </section>
     </div>
   );
+}
+
+function getCategorySortValue(category: Category, sortKey: CategorySortKey) {
+  if (sortKey === "image") return category.image;
+  if (sortKey === "name") return category.name;
+  if (sortKey === "order") return category.order;
+  return category.active ? 1 : 0;
 }
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string };

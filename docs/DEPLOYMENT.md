@@ -45,7 +45,7 @@ npm run build
 firebase deploy --only hosting,firestore
 ```
 
-Firebase Hosting serves the `dist` directory and rewrites all routes to `index.html` for React Router.
+Firebase Hosting serves the `dist` directory and rewrites all routes to `index.html` for React Router. Firestore rules must be deployed with the app because the admin audit trail uses the `auditLogs` collection.
 
 Do not deploy Storage for the no-card setup. New Firebase projects require billing for Cloud Storage. If Storage is enabled later on Blaze, deploy it with:
 

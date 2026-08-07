@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db, googleProvider, hasFirebaseConfig } from "../firebase/config";
+import { recordAuditLog } from "../services/auditService";
 import type { AdminRole } from "../types/catalog";
 
 type AdminProfile = {
@@ -60,10 +61,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authReady: hasFirebaseConfig,
       isAdmin: Boolean(profile?.active && profile.role === "administrator"),
       signInWithGoogle: async () => {
-        if (!auth) {
+        if (!auth || !db) {
           throw new Error("Firebase Authentication is not configured yet.");
         }
-        await signInWithPopup(auth, googleProvider);
+        const result = await signInWithPopup(auth, googleProvider);
+        const profileSnapshot = await getDoc(doc(db, "users", result.user.uid));
+        const nextProfile = profileSnapshot.exists() ? (profileSnapshot.data() as AdminProfile) : null;
+        const activeAdministrator = Boolean(nextProfile?.active && nextProfile.role === "administrator");
+
+        await recordAuditLog({
+          action: activeAdministrator ? "login" : "login_denied",
+          entityType: "auth",
+          entityId: result.user.uid,
+          entityName: result.user.email ?? "Google account",
+          actorUid: result.user.uid,
+          actorEmail: result.user.email ?? nextProfile?.email ?? "Unknown email",
+          actorName: nextProfile?.name ?? result.user.displayName ?? result.user.email ?? "Unknown user",
+          summary: activeAdministrator ? "Administrator signed in with Google." : "Google sign-in did not match an active administrator profile."
+        }).catch(() => undefined);
       },
       logOut: async () => {
         if (auth) {

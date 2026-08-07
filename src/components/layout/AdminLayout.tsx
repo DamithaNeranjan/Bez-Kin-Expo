@@ -1,4 +1,4 @@
-import { Boxes, LayoutDashboard, LogOut, Settings, Tags } from "lucide-react";
+import { Boxes, History, LayoutDashboard, LogOut, Settings, Tags } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -6,7 +6,8 @@ const adminNav = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/products", label: "Products", icon: Boxes },
   { to: "/admin/categories", label: "Categories", icon: Tags },
-  { to: "/admin/settings", label: "Settings", icon: Settings }
+  { to: "/admin/settings", label: "Settings", icon: Settings },
+  { to: "/admin/audit", label: "Audit trail", icon: History }
 ];
 
 export function AdminLayout() {
@@ -37,7 +38,7 @@ export function AdminLayout() {
         <button
           type="button"
           onClick={() => void logOut()}
-          className="absolute bottom-5 left-5 right-5 flex items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          className="absolute bottom-5 left-5 right-5 flex items-center justify-center gap-2 rounded-md border border-berry bg-berry px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-ink"
         >
           <LogOut className="h-4 w-4" />
           Sign out
@@ -56,7 +57,7 @@ export function AdminLayout() {
               <Icon className="h-4 w-4" />
             </NavLink>
           ))}
-          <button type="button" onClick={() => void logOut()} className="ml-auto h-10 w-10 rounded-md border border-slate-200" title="Sign out">
+          <button type="button" onClick={() => void logOut()} className="ml-auto h-10 w-10 rounded-md border border-berry bg-berry text-white shadow-sm" title="Sign out">
             <LogOut className="mx-auto h-4 w-4" />
           </button>
         </div>

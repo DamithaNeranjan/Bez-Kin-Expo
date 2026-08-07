@@ -15,6 +15,7 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminProducts } from "./pages/admin/AdminProducts";
 import { AdminCategories } from "./pages/admin/AdminCategories";
 import { AdminSettings } from "./pages/admin/AdminSettings";
+import { AdminAuditTrail } from "./pages/admin/AdminAuditTrail";
 
 export function App() {
   return (
@@ -41,6 +42,7 @@ export function App() {
         <Route path="products" element={<AdminProducts />} />
         <Route path="categories" element={<AdminCategories />} />
         <Route path="settings" element={<AdminSettings />} />
+        <Route path="audit" element={<AdminAuditTrail />} />
       </Route>
       <Route path="404" element={<NotFound />} />
       <Route path="*" element={<Navigate to="/404" replace />} />

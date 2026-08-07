@@ -8,9 +8,13 @@
 - Hidden admin dashboard.
 - Google sign-in gate for approved administrators.
 - Product, category, and settings management.
+- Admin product/category table pagination and clickable sorting.
+- Admin product-name filtering.
+- Immutable admin audit trail with login and catalogue/settings action tracking.
 - Firebase Hosting, Firestore, Authentication, and security rules.
 - Cloudinary/external image URL workflow for no-card image hosting.
 - Responsive public image optimization with blur-up placeholders.
+- Contained product imagery, blurred product-card backgrounds, product-detail magnifier, and full-screen image preview.
 - Public/admin loading spinners and admin form success/error feedback.
 - Optional Firebase Storage upload helper retained for a later billing-enabled upgrade.
 - SEO metadata, robots file, and starter sitemap.

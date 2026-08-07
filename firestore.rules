@@ -33,6 +33,18 @@ service cloud.firestore {
       allow create, update, delete: if adminUser();
     }
 
+    match /auditLogs/{auditLogId} {
+      allow read: if adminUser();
+      allow create: if adminUser()
+        || (
+          signedIn()
+          && request.resource.data.entityType == "auth"
+          && request.resource.data.actorUid == request.auth.uid
+          && request.resource.data.action in ["login", "login_denied"]
+        );
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

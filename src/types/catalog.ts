@@ -56,4 +56,21 @@ export type AdminUser = {
   createdAt: string;
 };
 
+export type AuditEntityType = "auth" | "product" | "category" | "settings";
+
+export type AuditAction = "login" | "login_denied" | "create" | "update" | "delete" | "upload";
+
+export type AuditLog = {
+  id: string;
+  action: AuditAction;
+  entityType: AuditEntityType;
+  entityId: string;
+  entityName: string;
+  actorUid: string;
+  actorEmail: string;
+  actorName: string;
+  summary: string;
+  createdAt: string;
+};
+
 export type ProductSort = "featured" | "name-asc" | "price-asc" | "price-desc";

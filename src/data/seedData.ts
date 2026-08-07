@@ -1,4 +1,4 @@
-import type { Category, Product, SiteSettings } from "../types/catalog";
+import type { AuditLog, Category, Product, SiteSettings } from "../types/catalog";
 
 const now = "2026-07-30T00:00:00.000Z";
 
@@ -227,3 +227,5 @@ export const seedSettings: SiteSettings = {
   about:
     "Bez-Kin Expo Ltd brings the authentic flavours of Sri Lanka to the UK, supplying groceries, fragrant spices, snacks, tea, staples, and frozen favourites for retailers, caterers, and families who want a real taste of home."
 };
+
+export const seedAuditLogs: AuditLog[] = [];
