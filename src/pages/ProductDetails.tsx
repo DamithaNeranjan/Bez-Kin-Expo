@@ -8,6 +8,7 @@ import { OptimizedImage } from "../components/ui/OptimizedImage";
 import { getCategories, getProductBySlug, getProducts } from "../services/catalogService";
 import type { Category, Product } from "../types/catalog";
 import { buildSrcSet, optimizeImageUrl } from "../utils/imageUrl";
+import { formatProductPrice, getCurrentProductPrice, getSeasonalOfferPrice } from "../utils/productPrice";
 
 export function ProductDetails() {
   const { slug = "" } = useParams();
@@ -130,6 +131,8 @@ export function ProductDetails() {
     );
   }
 
+  const offerPrice = getSeasonalOfferPrice(product);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -141,7 +144,7 @@ export function ProductDetails() {
     offers: {
       "@type": "Offer",
       priceCurrency: product.currency,
-      price: product.price,
+      price: getCurrentProductPrice(product),
       availability: product.available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
     }
   };
@@ -213,7 +216,17 @@ export function ProductDetails() {
             <h1 className="mt-2 text-4xl font-black">{product.name}</h1>
             <p className="mt-4 text-lg leading-8 text-slate-600">{product.description}</p>
             <dl className="mt-8 grid gap-4 rounded-lg border border-slate-200 bg-white p-6 sm:grid-cols-2">
-              <Spec label="Price" value={new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(product.price)} />
+              <div>
+                <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">Price</dt>
+                {offerPrice !== null ? (
+                  <dd className="mt-1 flex flex-wrap items-baseline gap-2">
+                    <span className="text-sm font-semibold text-slate-500 line-through">{formatProductPrice(product.price)}</span>
+                    <span className="text-xl font-black text-berry">{formatProductPrice(offerPrice)}</span>
+                  </dd>
+                ) : (
+                  <dd className="mt-1 text-sm font-semibold text-ink">{formatProductPrice(product.price)}</dd>
+                )}
+              </div>
               <Spec label="Weight" value={product.weight} />
               <Spec label="Brand" value={product.brand} />
               <Spec label="Country of origin" value={product.origin} />

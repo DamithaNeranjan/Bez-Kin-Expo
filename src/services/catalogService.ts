@@ -21,7 +21,8 @@ const dateFields = (existing?: Partial<Category | Product>) => ({
 
 const withProductDefaults = (product: Product): Product => ({
   ...product,
-  seasonalOffer: product.seasonalOffer ?? false
+  seasonalOffer: product.seasonalOffer ?? false,
+  seasonalOfferPrice: typeof product.seasonalOfferPrice === "number" ? product.seasonalOfferPrice : null
 });
 
 export async function getCategories(includeInactive = false): Promise<Category[]> {

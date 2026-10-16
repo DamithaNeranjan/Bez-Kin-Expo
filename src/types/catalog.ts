@@ -30,6 +30,7 @@ export type Product = {
   available: boolean;
   featured: boolean;
   seasonalOffer: boolean;
+  seasonalOfferPrice: number | null;
   active: boolean;
   tags: string[];
   createdAt: string;

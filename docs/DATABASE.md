@@ -37,6 +37,7 @@
   "available": true,
   "featured": true,
   "seasonalOffer": false,
+  "seasonalOfferPrice": null,
   "active": true,
   "tags": ["tea", "ceylon"],
   "createdAt": "2026-07-30T00:00:00.000Z",
@@ -60,7 +61,7 @@
 
 Stores editable company profile fields: company name, logo, phone, email, social links, WhatsApp channel link, business hours, and about copy. The boolean `seasonalOffersEnabled` controls whether eligible seasonal products may be shown on the homepage.
 
-Both `products.seasonalOffer` and `settings/site.seasonalOffersEnabled` default to `false` when missing, keeping older Firestore documents backward compatible without a migration.
+`products.seasonalOffer` and `settings/site.seasonalOffersEnabled` default to `false`, while `products.seasonalOfferPrice` defaults to `null`. A valid seasonal offer price must be greater than zero and lower than the original product price. These defaults keep older Firestore documents backward compatible without a migration.
 
 ### `auditLogs/{auditLogId}`
 

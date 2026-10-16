@@ -14,26 +14,40 @@ import { uploadImage } from "../../services/storageService";
 import type { Category, Product } from "../../types/catalog";
 import { slugify } from "../../utils/slug";
 
-const productSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(2),
-  slug: z.string().min(2),
-  shortDescription: z.string().min(10),
-  description: z.string().min(20),
-  categoryId: z.string().min(1),
-  price: z.coerce.number().min(0),
-  brand: z.string().min(1),
-  origin: z.string().min(1),
-  weight: z.string().min(1),
-  sku: z.string().min(1),
-  coverImage: z.string().url("Enter a valid cover image URL."),
-  imageList: z.string().optional(),
-  tags: z.string().optional(),
-  available: z.boolean(),
-  featured: z.boolean(),
-  seasonalOffer: z.boolean(),
-  active: z.boolean()
-});
+const productSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().min(2),
+    slug: z.string().min(2),
+    shortDescription: z.string().min(10),
+    description: z.string().min(20),
+    categoryId: z.string().min(1),
+    price: z.coerce.number().min(0),
+    brand: z.string().min(1),
+    origin: z.string().min(1),
+    weight: z.string().min(1),
+    sku: z.string().min(1),
+    coverImage: z.string().url("Enter a valid cover image URL."),
+    imageList: z.string().optional(),
+    tags: z.string().optional(),
+    available: z.boolean(),
+    featured: z.boolean(),
+    seasonalOffer: z.boolean(),
+    seasonalOfferPrice: z.number().positive("Enter an offer price greater than zero.").nullable(),
+    active: z.boolean()
+  })
+  .superRefine((product, context) => {
+    if (!product.seasonalOffer) return;
+
+    if (product.seasonalOfferPrice === null) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: "Enter an offer price.", path: ["seasonalOfferPrice"] });
+      return;
+    }
+
+    if (product.seasonalOfferPrice >= product.price) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: "Offer price must be lower than the original price.", path: ["seasonalOfferPrice"] });
+    }
+  });
 
 type ProductForm = z.infer<typeof productSchema>;
 type ProductSortKey = "coverImage" | "name" | "category" | "price" | "state";
@@ -58,6 +72,7 @@ const emptyProduct: ProductForm = {
   available: true,
   featured: false,
   seasonalOffer: false,
+  seasonalOfferPrice: null,
   active: true
 };
 
@@ -75,6 +90,7 @@ export function AdminProducts() {
   const form = useForm<ProductForm>({ resolver: zodResolver(productSchema), defaultValues: emptyProduct });
   const name = form.watch("name");
   const id = form.watch("id");
+  const seasonalOffer = form.watch("seasonalOffer");
 
   useEffect(() => {
     if (!id && name) {
@@ -181,6 +197,7 @@ export function AdminProducts() {
           available: values.available,
           featured: values.featured,
           seasonalOffer: values.seasonalOffer,
+          seasonalOfferPrice: values.seasonalOffer ? values.seasonalOfferPrice : null,
           active: values.active,
           tags: values.tags ? values.tags.split(",").map((tag) => tag.trim()).filter(Boolean) : [],
           createdAt: new Date().toISOString(),
@@ -296,12 +313,27 @@ export function AdminProducts() {
           </label>
           <Textarea label="Additional image URLs, one per line" {...form.register("imageList")} />
           <Input label="Tags, comma separated" {...form.register("tags")} />
-          <div className="grid grid-cols-2 gap-2 text-sm font-semibold sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 text-sm font-semibold">
             <Checkbox label="Available" {...form.register("available")} />
+            <Checkbox label="Active" {...form.register("active")} />
             <Checkbox label="Featured" {...form.register("featured")} />
             <Checkbox label="Seasonal offer" {...form.register("seasonalOffer")} />
-            <Checkbox label="Active" {...form.register("active")} />
           </div>
+          {seasonalOffer ? (
+            <div className="rounded-md border border-berry/30 bg-berry/5 p-3">
+              <Input
+                label="Seasonal offer price"
+                type="number"
+                min="0.01"
+                step="0.01"
+                {...form.register("seasonalOfferPrice", {
+                  setValueAs: (value) => (value === "" || Number.isNaN(Number(value)) ? null : Number(value))
+                })}
+                error={form.formState.errors.seasonalOfferPrice?.message}
+              />
+              <p className="mt-2 text-xs leading-5 text-slate-600">Enter a promotional price lower than the original product price.</p>
+            </div>
+          ) : null}
           <FormFeedback message={message} />
           <div className="flex gap-2">
             <button type="submit" disabled={form.formState.isSubmitting} className="inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">

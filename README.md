@@ -82,7 +82,7 @@ Firestore collections:
 - `settings/site`
 - `auditLogs`
 
-Products include a `seasonalOffer` flag, which defaults to `false`. The `settings/site` document includes `seasonalOffersEnabled`; the homepage section is shown only when that setting is enabled and at least one active, available product is marked as a seasonal offer.
+Products include a `seasonalOffer` flag and `seasonalOfferPrice`, which default to `false` and `null`. The `settings/site` document includes `seasonalOffersEnabled`; the homepage section is shown only when that setting is enabled and at least one active, available product has a valid seasonal price below its original price.
 
 Reserved future collections are not created in V1: `orders`, `customers`, `payments`, `reviews`, `wishlist`, and `cart`.
 

@@ -9,6 +9,7 @@ import { OptimizedImage } from "../components/ui/OptimizedImage";
 import { getCategories, getProducts, getSiteSettings } from "../services/catalogService";
 import { seedSettings } from "../data/seedData";
 import type { Category, Product, SiteSettings } from "../types/catalog";
+import { getSeasonalOfferPrice } from "../utils/productPrice";
 
 export function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -27,7 +28,7 @@ export function Home() {
 
   const featuredProducts = useMemo(() => products.filter((product) => product.featured).slice(0, 4), [products]);
   const seasonalProducts = useMemo(
-    () => products.filter((product) => product.seasonalOffer && product.active && product.available),
+    () => products.filter((product) => product.active && product.available && getSeasonalOfferPrice(product) !== null),
     [products]
   );
 

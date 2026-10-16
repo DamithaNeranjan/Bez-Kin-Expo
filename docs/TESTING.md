@@ -15,6 +15,7 @@ npm run build
 - Home page renders hero, categories, featured products, about summary, and contact information.
 - Home page shows Seasonal Offers immediately below the hero only when the setting is enabled and at least one active, available product is marked as seasonal.
 - Seasonal Offers hides automatically when disabled or when no eligible products are selected.
+- Seasonal products show the original price struck through and the lower offer price highlighted on catalogue cards and product details.
 - Public pages show loading spinners while Firestore data is loading.
 - Products page supports search by name, tag, brand, and origin.
 - Products page filters by category.
@@ -34,6 +35,7 @@ npm run build
 - Signed-in users without an active administrator Firestore profile cannot access admin routes.
 - Administrators can create, edit, delete, activate, feature, and mark products available.
 - Administrators can include or exclude products from Seasonal Offers; new and legacy products default to excluded.
+- Selecting Seasonal offer reveals the offer-price field and requires a positive price below the original product price.
 - Admin product table supports product-name filtering, clickable column sorting, and pagination.
 - Administrators can create, edit, delete, activate, and reorder categories.
 - Admin category table supports clickable column sorting and pagination.

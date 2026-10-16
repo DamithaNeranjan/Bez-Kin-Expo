@@ -5,6 +5,7 @@ import { Seo } from "../components/Seo";
 import { LoadingState } from "../components/ui/LoadingSpinner";
 import { getCategories, getProducts } from "../services/catalogService";
 import type { Category, Product, ProductSort } from "../types/catalog";
+import { getCurrentProductPrice } from "../utils/productPrice";
 
 const pageSize = 8;
 
@@ -39,8 +40,8 @@ export function Products() {
       })
       .sort((a, b) => {
         if (sort === "name-asc") return a.name.localeCompare(b.name);
-        if (sort === "price-asc") return a.price - b.price;
-        if (sort === "price-desc") return b.price - a.price;
+        if (sort === "price-asc") return getCurrentProductPrice(a) - getCurrentProductPrice(b);
+        if (sort === "price-desc") return getCurrentProductPrice(b) - getCurrentProductPrice(a);
         return Number(b.featured) - Number(a.featured) || a.name.localeCompare(b.name);
       });
   }, [categoryId, products, query, sort]);
