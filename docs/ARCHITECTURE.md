@@ -51,6 +51,8 @@ Admin product and category management pages use client-side table controls for p
 
 Public queries only request documents permitted by Firestore rules. Products use `available == true` and `active == true`; categories use `active == true`. Sorting happens in the app to avoid composite indexes for the initial catalogue size.
 
+The homepage derives Seasonal Offers from the public-safe product result by selecting products with `seasonalOffer == true`. It renders the section immediately below the hero only when `settings/site.seasonalOffersEnabled` is enabled and the derived list is not empty. Missing fields on older documents are normalized to `false`, so no migration is required.
+
 Public images are rendered through an optimized image component that creates responsive Cloudinary/Unsplash URLs, uses browser lazy loading, and shows blur placeholders while full images load.
 
 Product cards and product detail pages use contained product image rendering so pack shots are not cropped. Product cards add a blurred, zoomed background version of the product image for visual depth, while the product detail main image has a desktop hover magnifier and additional images can be opened in a full-screen preview.

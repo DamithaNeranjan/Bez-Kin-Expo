@@ -13,6 +13,8 @@ npm run build
 ## Public Website Scenarios
 
 - Home page renders hero, categories, featured products, about summary, and contact information.
+- Home page shows Seasonal Offers immediately below the hero only when the setting is enabled and at least one active, available product is marked as seasonal.
+- Seasonal Offers hides automatically when disabled or when no eligible products are selected.
 - Public pages show loading spinners while Firestore data is loading.
 - Products page supports search by name, tag, brand, and origin.
 - Products page filters by category.
@@ -31,10 +33,12 @@ npm run build
 - Login is disabled until Firebase environment variables are configured.
 - Signed-in users without an active administrator Firestore profile cannot access admin routes.
 - Administrators can create, edit, delete, activate, feature, and mark products available.
+- Administrators can include or exclude products from Seasonal Offers; new and legacy products default to excluded.
 - Admin product table supports product-name filtering, clickable column sorting, and pagination.
 - Administrators can create, edit, delete, activate, and reorder categories.
 - Admin category table supports clickable column sorting and pagination.
 - Administrators can update company settings.
+- Administrators can show or hide the Seasonal Offers homepage section from company settings.
 - Administrators can review the audit trail with keyword, area, action filters, and pagination.
 - Admin forms show success and failure feedback after save, delete, upload, and validation-blocked submissions.
 - Admin pages and submit buttons show loading spinners during data loads and saves.

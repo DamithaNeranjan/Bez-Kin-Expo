@@ -29,6 +29,7 @@ export type Product = {
   images: string[];
   available: boolean;
   featured: boolean;
+  seasonalOffer: boolean;
   active: boolean;
   tags: string[];
   createdAt: string;
@@ -45,6 +46,7 @@ export type SiteSettings = {
   whatsApp: string;
   businessHours: string;
   about: string;
+  seasonalOffersEnabled: boolean;
 };
 
 export type AdminUser = {

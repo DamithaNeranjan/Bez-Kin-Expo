@@ -31,6 +31,7 @@ const productSchema = z.object({
   tags: z.string().optional(),
   available: z.boolean(),
   featured: z.boolean(),
+  seasonalOffer: z.boolean(),
   active: z.boolean()
 });
 
@@ -56,6 +57,7 @@ const emptyProduct: ProductForm = {
   tags: "",
   available: true,
   featured: false,
+  seasonalOffer: false,
   active: true
 };
 
@@ -178,6 +180,7 @@ export function AdminProducts() {
           images,
           available: values.available,
           featured: values.featured,
+          seasonalOffer: values.seasonalOffer,
           active: values.active,
           tags: values.tags ? values.tags.split(",").map((tag) => tag.trim()).filter(Boolean) : [],
           createdAt: new Date().toISOString(),
@@ -293,9 +296,10 @@ export function AdminProducts() {
           </label>
           <Textarea label="Additional image URLs, one per line" {...form.register("imageList")} />
           <Input label="Tags, comma separated" {...form.register("tags")} />
-          <div className="grid grid-cols-3 gap-2 text-sm font-semibold">
+          <div className="grid grid-cols-2 gap-2 text-sm font-semibold sm:grid-cols-4">
             <Checkbox label="Available" {...form.register("available")} />
             <Checkbox label="Featured" {...form.register("featured")} />
+            <Checkbox label="Seasonal offer" {...form.register("seasonalOffer")} />
             <Checkbox label="Active" {...form.register("active")} />
           </div>
           <FormFeedback message={message} />
@@ -368,7 +372,11 @@ export function AdminProducts() {
                       <td className="px-4 py-3 font-semibold">{product.name}</td>
                       <td className="px-4 py-3">{categoryMap.get(product.categoryId)?.name ?? product.categoryId}</td>
                       <td className="px-4 py-3">GBP {product.price.toFixed(2)}</td>
-                      <td className="px-4 py-3">{product.available ? "Available" : "Unavailable"}{product.featured ? " / Featured" : ""}</td>
+                      <td className="px-4 py-3">
+                        {product.available ? "Available" : "Unavailable"}
+                        {product.featured ? " / Featured" : ""}
+                        {product.seasonalOffer ? " / Seasonal" : ""}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
                           <button type="button" onClick={() => editProduct(product)} className="h-9 w-9 rounded-md border border-slate-200" title="Edit product"><Edit className="mx-auto h-4 w-4" /></button>
@@ -400,7 +408,7 @@ function getProductSortValue(product: Product, sortKey: ProductSortKey, category
   if (sortKey === "name") return product.name;
   if (sortKey === "category") return categoryMap.get(product.categoryId)?.name ?? product.categoryId;
   if (sortKey === "price") return product.price;
-  return `${product.available ? "Available" : "Unavailable"} ${product.featured ? "Featured" : ""} ${product.active ? "Active" : "Inactive"}`;
+  return `${product.available ? "Available" : "Unavailable"} ${product.featured ? "Featured" : ""} ${product.seasonalOffer ? "Seasonal" : ""} ${product.active ? "Active" : "Inactive"}`;
 }
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string };

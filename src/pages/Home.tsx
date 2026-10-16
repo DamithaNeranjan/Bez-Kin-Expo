@@ -1,4 +1,4 @@
-import { ArrowRight, Phone } from "lucide-react";
+import { ArrowRight, Phone, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CategoryCard } from "../components/catalog/CategoryCard";
@@ -26,6 +26,10 @@ export function Home() {
   }, []);
 
   const featuredProducts = useMemo(() => products.filter((product) => product.featured).slice(0, 4), [products]);
+  const seasonalProducts = useMemo(
+    () => products.filter((product) => product.seasonalOffer && product.active && product.available),
+    [products]
+  );
 
   return (
     <>
@@ -84,6 +88,34 @@ export function Home() {
             </div>
           </div>
         </section>
+
+        {settings.seasonalOffersEnabled && seasonalProducts.length > 0 ? (
+          <section aria-labelledby="seasonal-offers-heading" className="border-y border-harvest/40 bg-gradient-to-br from-harvest/20 via-white to-berry/10">
+            <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                <div>
+                  <p className="inline-flex items-center gap-2 rounded-full bg-berry px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-white shadow-sm">
+                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                    Limited-time selection
+                  </p>
+                  <h2 id="seasonal-offers-heading" className="mt-3 text-3xl font-black sm:text-4xl">Seasonal Offers</h2>
+                  <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
+                    Discover our current seasonal picks, selected to bring even more flavour to your table.
+                  </p>
+                </div>
+                <Link to="/products" className="inline-flex items-center gap-2 text-sm font-bold text-berry transition hover:text-ink">
+                  Browse full catalogue
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {seasonalProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} category={categories.find((category) => category.id === product.categoryId)} />
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">

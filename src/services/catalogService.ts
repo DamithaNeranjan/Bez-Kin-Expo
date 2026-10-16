@@ -19,6 +19,11 @@ const dateFields = (existing?: Partial<Category | Product>) => ({
   updatedAt: new Date().toISOString()
 });
 
+const withProductDefaults = (product: Product): Product => ({
+  ...product,
+  seasonalOffer: product.seasonalOffer ?? false
+});
+
 export async function getCategories(includeInactive = false): Promise<Category[]> {
   if (!db) {
     return seedCategories.filter((category) => includeInactive || category.active).sort((a, b) => a.order - b.order);
@@ -35,6 +40,7 @@ export async function getCategories(includeInactive = false): Promise<Category[]
 export async function getProducts(includeUnavailable = false): Promise<Product[]> {
   if (!db) {
     return seedProducts
+      .map(withProductDefaults)
       .filter((product) => includeUnavailable || (product.available && product.active))
       .sort((a, b) => Number(b.featured) - Number(a.featured) || a.name.localeCompare(b.name));
   }
@@ -44,7 +50,7 @@ export async function getProducts(includeUnavailable = false): Promise<Product[]
     : query(collection(db, "products"), where("available", "==", true), where("active", "==", true));
   const snapshot = await getDocs(productQuery);
   return snapshot.docs
-    .map((productDoc) => ({ id: productDoc.id, ...productDoc.data() }) as Product)
+    .map((productDoc) => withProductDefaults({ id: productDoc.id, ...productDoc.data() } as Product))
     .filter((product) => includeUnavailable || (product.available && product.active))
     .sort((a, b) => Number(b.featured) - Number(a.featured) || a.name.localeCompare(b.name));
 }
@@ -138,7 +144,8 @@ export async function saveSiteSettings(settings: SiteSettings) {
     instagram: settings.instagram,
     whatsApp: settings.whatsApp,
     businessHours: settings.businessHours,
-    about: settings.about
+    about: settings.about,
+    seasonalOffersEnabled: settings.seasonalOffersEnabled
   };
 
   await setDoc(doc(db, "settings", "site"), payload);

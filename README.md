@@ -6,6 +6,7 @@ React, Vite, Tailwind, and Firebase catalogue site for a UK business importing S
 
 - Public pages for home, products, product details, categories, about, and contact.
 - Product search, category filtering, sorting, and pagination.
+- Administrator-curated seasonal offers with a prominent, visibility-controlled homepage section.
 - Clean slug routes with metadata, OpenGraph/Twitter tags, and Product JSON-LD.
 - Hidden admin dashboard for products, categories, settings, and audit trail review.
 - Admin product/category tables with pagination and clickable column sorting.
@@ -80,6 +81,8 @@ Firestore collections:
 - `users`
 - `settings/site`
 - `auditLogs`
+
+Products include a `seasonalOffer` flag, which defaults to `false`. The `settings/site` document includes `seasonalOffersEnabled`; the homepage section is shown only when that setting is enabled and at least one active, available product is marked as a seasonal offer.
 
 Reserved future collections are not created in V1: `orders`, `customers`, `payments`, `reviews`, `wishlist`, and `cart`.
 

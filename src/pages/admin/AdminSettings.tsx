@@ -22,7 +22,8 @@ const settingsSchema = z.object({
   instagram: z.string().url().or(z.literal("")),
   whatsApp: z.string().url().or(z.literal("")),
   businessHours: z.string().min(3),
-  about: z.string().min(20)
+  about: z.string().min(20),
+  seasonalOffersEnabled: z.boolean()
 });
 
 export function AdminSettings() {
@@ -118,6 +119,15 @@ export function AdminSettings() {
         <Input label="Instagram" {...form.register("instagram")} error={form.formState.errors.instagram?.message} />
         <Input label="WhatsApp channel URL" {...form.register("whatsApp")} error={form.formState.errors.whatsApp?.message} />
         <Input label="Business hours" {...form.register("businessHours")} error={form.formState.errors.businessHours?.message} />
+        <label className="flex items-start gap-3 rounded-md border border-harvest/50 bg-harvest/10 p-4 md:col-span-2">
+          <input type="checkbox" {...form.register("seasonalOffersEnabled")} className="mt-1 h-4 w-4 accent-leaf" />
+          <span>
+            <span className="block text-sm font-bold text-slate-800">Show seasonal offers on homepage</span>
+            <span className="mt-1 block text-sm leading-6 text-slate-600">
+              Displays eligible seasonal products directly below the homepage hero. The section stays hidden when no eligible products are selected.
+            </span>
+          </span>
+        </label>
         <Textarea label="About company" {...form.register("about")} error={form.formState.errors.about?.message} />
         <FormFeedback message={message} className="md:col-span-2" />
         <div className="md:col-span-2">
